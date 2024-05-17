@@ -1,0 +1,428 @@
+// Google Fonts
+// font-family: 'Mulish', sans-serif;
+@import url("https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800&display=swap");
+@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css");
+@import url("https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css");
+
+html,
+body,
+div,
+span,
+applet,
+object,
+iframe,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote,
+pre,
+a,
+abbr,
+acronym,
+address,
+big,
+cite,
+code,
+del,
+dfn,
+em,
+img,
+ins,
+kbd,
+q,
+s,
+samp,
+small,
+strike,
+strong,
+sub,
+sup,
+tt,
+var,
+b,
+u,
+i,
+center,
+dl,
+dt,
+dd,
+ol,
+ul,
+li,
+fieldset,
+form,
+label,
+legend,
+table,
+caption,
+tbody,
+tfoot,
+thead,
+tr,
+th,
+td,
+article,
+aside,
+canvas,
+details,
+embed,
+figure,
+figcaption,
+footer,
+header,
+hgroup,
+menu,
+nav,
+output,
+ruby,
+section,
+summary,
+time,
+mark,
+audio,
+video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: none;
+  box-shadow: none;
+  list-style: none;
+  text-decoration: none;
+}
+
+/* HTML5 display-role reset for older browsers */
+article,
+aside,
+details,
+figcaption,
+figure,
+footer,
+header,
+hgroup,
+menu,
+nav,
+section {
+  display: block;
+}
+
+body {
+  line-height: 1;
+  background: #f1efef;
+  color: #000;
+  font-family: "Mulish", sans-serif;
+}
+
+ol,
+ul {
+  list-style: none;
+}
+
+blockquote,
+q {
+  quotes: none;
+}
+
+blockquote:before,
+blockquote:after,
+q:before,
+q:after {
+  content: "";
+  content: none;
+}
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+.navbar-toggler {
+  box-shadow: none !important;
+  outline: none;
+  border: 0;
+}
+
+.h1,
+.h2,
+.h3,
+.h4,
+.h5,
+.h6,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin-bottom: 0;
+}
+
+button,
+a {
+  background: none;
+  border: 0;
+  padding: 0;
+  box-shadow: none;
+}
+
+.fs-10 {
+  font-size: 10px;
+}
+.fs-11 {
+  font-size: 11px;
+}
+
+.fs-12 {
+  font-size: 12px;
+}
+
+.fs-13 {
+  font-size: 13px;
+}
+
+.fs-14 {
+  font-size: 14px;
+}
+
+.fs-15 {
+  font-size: 15px;
+}
+
+.fs-16 {
+  font-size: 16px;
+}
+
+.fs-17 {
+  font-size: 17px;
+}
+
+.fs-18 {
+  font-size: 18px;
+}
+
+.fs-19 {
+  font-size: 19px;
+}
+
+.fs-20 {
+  font-size: 20px;
+}
+
+.fs-21 {
+  font-size: 21px;
+}
+
+.fs-22 {
+  font-size: 22px;
+}
+
+.fs-23 {
+  font-size: 23px;
+}
+
+.fs-24 {
+  font-size: 24px;
+}
+
+.fs-25 {
+  font-size: 25px;
+}
+
+.fs-26 {
+  font-size: 26px;
+}
+
+.fs-27 {
+  font-size: 27px;
+}
+
+.fs-28 {
+  font-size: 28px;
+}
+
+.fs-29 {
+  font-size: 29px;
+}
+
+.fs-30 {
+  font-size: 30px;
+}
+
+.fs-31 {
+  font-size: 31px;
+}
+
+.fs-32 {
+  font-size: 32px;
+}
+
+.fs-33 {
+  font-size: 33px;
+}
+
+.fs-34 {
+  font-size: 34px;
+}
+
+.fs-35 {
+  font-size: 35px;
+}
+
+.fs-36 {
+  font-size: 36px;
+}
+
+.fs-37 {
+  font-size: 37px;
+}
+
+.row-gap {
+  row-gap: 18px;
+}
+
+.gray-c {
+  color: #9fa2b4;
+}
+
+.orange-c {
+  color: #D57D2A;
+}
+
+.black-38 {
+  color: rgba(0, 0, 0, 0.38);
+}
+
+.container {
+  max-width: 1280px;
+}
+
+// .form-select {
+// 	color: #000 !important;
+// }
+
+.btn-check:checked+.btn,
+.btn.active,
+.btn.show,
+.btn:first-child:active,
+:not(.btn-check)+.btn:active {
+  background-color: unset !important;
+  border-color: none !important;
+  color: none !important;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+
+.scheduling-nav {
+  padding-top: 30px;
+  gap: 50px;
+  row-gap: 10px;
+
+  @media (max-width: 575.98px) {
+    justify-content: center;
+  }
+
+  .nav-link {
+    font-size: 15px;
+    color: #000;
+    letter-spacing: -0.333px;
+    padding-left: 0;
+    padding-right: 0;
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+
+    &::before {
+      content: "\f111";
+      font-family: "Font Awesome 6 free";
+      font-weight: 400;
+      margin-right: 10px;
+      font-size: 20px;
+      color: #C5C7CD;
+    }
+
+    &.active {
+      background: none;
+      color: #000;
+
+      &::before {
+        content: "\f058";
+        font-weight: 900;
+        color: rgba(213, 125, 42, 0.87);
+      }
+    }
+  }
+}
+
+.scheduling-fff {
+  .scheduling-input {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    .input-black {
+      border-radius: 5px;
+      background: #F1EFEF;
+      width: 127px;
+      height: 38px;
+      padding: 10px;
+      border: 0;
+      margin-right: 15px;
+    }
+
+    .select__form {
+      width: 100%;
+    }
+
+    select {
+      border-radius: 5px;
+      background-color: #F1EFEF;
+    }
+  }
+
+  .shedule-calendar {
+    border-radius: 5px;
+    background: #F1EFEF;
+    width: 100%;
+    height: 38px;
+    padding: 10px;
+    border: 0;
+    margin-right: 15px;
+    cursor: pointer;
+    font-size: 15px;
+    color: #000;
+
+  }
+
+  .react-datepicker__input-container {
+    position: relative;
+
+    &::after {
+      content: "\f078";
+      font-family: "Font Awesome 6 free";
+      font-weight: 900;
+      border: 0;
+      font-size: 14px;
+      position: absolute;
+      right: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+  }
+}
+
+.PMWorkScheduling {
+  height: 100%;
+  display: grid;
+  align-items: stretch;
+
+  .details-buttons {
+    align-items: end;
+  }
+}
