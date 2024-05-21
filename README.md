@@ -12,7 +12,7 @@ This is a simple project that will require you to create a new work order record
 # Instructions
 
  ### Set up
-  - Clone the project from [this will be provided during the interview]
+  - Clone the project from [`https://github.com/ianomondi/interview-task.git`]
   - Run `yarn install`
   - Run `yarn start`
   
