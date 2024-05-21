@@ -3,55 +3,74 @@ import { Dropdown } from "react-bootstrap";
 import Modal from "react-bootstrap/Modal";
 import { Link } from "react-router-dom";
 import SearchIcon from "../../../Assets/Icons/SearchIcon";
+import { useDispatch, useSelector } from "react-redux";
+import { addProjectedPart } from "../../../redux/formSlice";
 
-const AddPartsModal = (props) => {
-  const [selectedPart, setselectedPart] = useState("Select Part");
-  const [selectedPartLocation, setselectedPartLocation] = useState(
+const AddPartsModal = ({ onHide, show, partData, partLocationData }) => {
+  const formState = useSelector((state) => state.form);
+  const dispatch = useDispatch();
+
+  const [selectedPart, setSelectedPart] = useState("Select Part");
+  const [selectedPartLocation, setSelectedPartLocation] = useState(
     "Select location of part"
   );
+  const [quantity, setQuantity] = useState("");
 
-  //Dummy part and location data
-  const partData = [
-    { name: "Select  " },
-    { name: "Part" },
-    { name: "Part 2" },
-    { name: "Part 3" },
-    { name: "Part 4" },
-  ];
-  const partLocationData = [
-    { name: "Select  " },
-    { name: "location  " },
-    { name: "Part" },
-    { name: "location 2" },
-    { name: "location 3" },
-    { name: "location 4" },
-  ];
-
-  //part location search input
+  // Part location search input
   const [partLocationSearch, setPartLocationSearch] = useState("");
-  //part category search input
+  // Part category search input
   const [partSearch, setPartSearch] = useState("");
 
-  //filter part and location data
-  const filteredPartData = partData.filter((item) => {
-    return item.name.toLowerCase().includes(partSearch.toLowerCase());
-  });
-  const filteredPartLocationData = partLocationData.filter((item) => {
-    return item.name.toLowerCase().includes(partLocationSearch.toLowerCase());
-  });
+  // Filter part and location data
+  const filteredPartData =
+    partData &&
+    partData.filter((item) => {
+      return item.partName.toLowerCase().includes(partSearch.toLowerCase());
+    });
+  const filteredPartLocationData =
+    partLocationData &&
+    partLocationData.filter((item) => {
+      return item.locationName
+        .toLowerCase()
+        .includes(partLocationSearch.toLowerCase());
+    });
 
   const handlePartSelect = (eventKey) => {
-    setselectedPart(eventKey);
+    setSelectedPart(eventKey);
     setPartSearch("");
   };
+
   const handlePartLocationSelect = (eventKey) => {
-    setselectedPartLocation(eventKey);
+    setSelectedPartLocation(eventKey);
     setPartLocationSearch("");
+  };
+
+  const handleAddPart = () => {
+    const part = partData.find((item) => item.partName === selectedPart);
+    const location = partLocationData.find(
+      (item) => item.locationName === selectedPartLocation
+    );
+
+    if (part && location && quantity) {
+      const partObject = {
+        partId: part.id,
+        partName: part.partName,
+        locationId: location.id,
+        locationName: location.locationName,
+        quantity: Number(quantity),
+      };
+
+      dispatch(addProjectedPart(partObject));
+      onHide();
+    } else {
+      // Handle validation errors (e.g., show a message to the user)
+    }
   };
 
   return (
     <Modal
-      {...props}
+      show={show}
+      onHide={onHide}
       aria-labelledby="contained-modal-title-vcenter"
       centered
       className="medium-modal"
@@ -89,11 +108,12 @@ const AddPartsModal = (props) => {
                     />
                   </form>
                   <div className="dropdown-item-content">
-                    {filteredPartData.map((item, index) => (
-                      <Dropdown.Item key={index} eventKey={item.name}>
-                        {item.name}
-                      </Dropdown.Item>
-                    ))}
+                    {filteredPartData &&
+                      filteredPartData.map((item, index) => (
+                        <Dropdown.Item key={index} eventKey={item.partName}>
+                          {item.partName}
+                        </Dropdown.Item>
+                      ))}
                   </div>
                 </Dropdown.Menu>
               </Dropdown>
@@ -112,6 +132,8 @@ const AddPartsModal = (props) => {
                   padding: "0 15px",
                 }}
                 placeholder="Enter quantity required"
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
               />
             </div>
             <div className="col-md-12">
@@ -143,11 +165,12 @@ const AddPartsModal = (props) => {
                     />
                   </form>
                   <div className="dropdown-item-content">
-                    {filteredPartLocationData.map((item, index) => (
-                      <Dropdown.Item key={index} eventKey={item.name}>
-                        {item.name}
-                      </Dropdown.Item>
-                    ))}
+                    {filteredPartLocationData &&
+                      filteredPartLocationData.map((item, index) => (
+                        <Dropdown.Item key={index} eventKey={item.locationName}>
+                          {item.locationName}
+                        </Dropdown.Item>
+                      ))}
                   </div>
                 </Dropdown.Menu>
               </Dropdown>
@@ -163,12 +186,12 @@ const AddPartsModal = (props) => {
               gap: "30px",
             }}
           >
-            <button className="cancel-btn" onClick={props.onHide}>
+            <button className="cancel-btn" onClick={onHide}>
               Cancel
             </button>
-            <Link to="" className="delate-btn" onClick={props.onHide}>
+            <button className="delate-btn" onClick={handleAddPart}>
               Add
-            </Link>
+            </button>
           </div>
         </div>
       </Modal.Body>

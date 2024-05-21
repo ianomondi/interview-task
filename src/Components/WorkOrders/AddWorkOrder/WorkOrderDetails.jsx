@@ -1,20 +1,42 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import DownIcon from "../../../Assets/Icons/DownIcon";
 import SearchIcon from "../../../Assets/Icons/SearchIcon";
 import AddPartsModal from "../Modal/AddPartsModal";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import EditIcon2 from "../../../Assets/Icons/EditIcon2";
 import DelateIcon2 from "../../../Assets/Icons/DelateIcon2";
 import { Dropdown, Modal } from "react-bootstrap";
+import usefetchData from "../../../hooks/useFetchData";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  setTicketDescription,
+  setTicketTitle,
+  setEstimatedHours,
+  setAssignedTeam,
+  setAssignedUser,
+  setCategory,
+  setTicketPriority,
+  addChecklistId,
+  removeChecklistId,
+} from "../../../redux/formSlice";
 
 const WorkOrderDetails = () => {
+  const formState = useSelector((state) => state.form);
+  const dispatch = useDispatch();
   const [addPartShow, setAddPartShow] = useState(false);
   const [selectedWork, setselectedWork] = useState("Select");
   const [selectedTeam, setselectedTeam] = useState("Select");
   const [selectedAssignWorker, setselectedAssignWorker] = useState("Select");
   const [selectedPart, setselectedPart] = useState("Part B - 200008");
+  const [teamId, setTeamId] = useState(null);
+  const [categoryofworkId, setCategoryOfWorkId] = useState(null);
   //part search input
   const [partSearch, setPartSearch] = useState("");
+
+  const projected = [];
+
+  const locationId = formState.locationId;
+  // const categoryofworkId = location.state.categoryofworkId;
 
   const [projectParts, setProjectParts] = useState([
     { id: 1, part: "Part A - 100005", quantity: 3 },
@@ -27,9 +49,20 @@ const WorkOrderDetails = () => {
   const [search, setSearch] = useState("");
 
   const [selectedPriority, setSelectedPriority] = useState(null);
+  const [selectedChecklist, setSelectedChecklist] = useState(
+    "Select Checklist Item"
+  );
+  const [checklistSearch, setChecklistSearch] = useState("");
 
-  const handlePriorityClick = (priority) => {
-    setSelectedPriority(priority);
+  const handlePriorityClick = (items) => {
+    const pri = priority.find((item) => item.ticketPrioritiesName === items);
+    setSelectedPriority(items);
+    dispatch(
+      setTicketPriority({
+        priority: pri.ticketPrioritiesName,
+        priorityId: pri.id,
+      })
+    );
   };
 
   const [selectValue, setSelectValue] = useState({
@@ -39,38 +72,73 @@ const WorkOrderDetails = () => {
     assignAdditionalTeam: "Select",
   });
 
-  //filter checklist by search
-  const filteredCheckList = checkList.filter((check) =>
-    check.name.toLowerCase().includes(search.toLowerCase())
-  );
-
   const handlePartSelect = (eventKey) => {
     setselectedPart(eventKey);
     setSelectValue({ ...selectValue, part: eventKey });
   };
 
-  //Dummy data
-  const workData = [
-    { name: "Category " },
-    { name: "Work" },
-    { name: "Type" },
-    { name: "Priority" },
-    { name: "Status" },
-  ];
-  const teamData = [
-    { name: "Assign " },
-    { name: "Team" },
-    { name: "Primary" },
-    { name: "Secondary" },
-    { name: "Tertiary" },
-  ];
-  const assignWorkerData = [
-    { name: "Assign " },
-    { name: "Worker " },
-    { name: "Primary" },
-    { name: "Secondary" },
-    { name: "Tertiary" },
-  ];
+  const { data: workData } = usefetchData(
+    ["work-data"],
+    `/CategoryOfWorks`,
+    {},
+    "Couldn't get work data. Please try again!",
+    true
+  );
+
+  const { data: teamData } = usefetchData(
+    ["team-data"],
+    `/Team/GetTeamsToAssignTicket?locationId=${locationId}&categoryofworkId=${categoryofworkId}`,
+    {},
+    "Couldn't get team data. Please try again!",
+    !!categoryofworkId && !!locationId
+  );
+
+  const { data: assignWorkerData } = usefetchData(
+    ["assign-worker"],
+    `/Team/GetAllUsersByTeam/${teamId}`,
+    {},
+    "Couldn't get team data. Please try again!",
+    !!teamId && !!categoryofworkId
+  );
+
+  const { data: priority } = usefetchData(
+    ["priority"],
+    `/Tickets/GetAllTicketPriorities`,
+    {},
+    "Couldn't get priority data. Please try again!",
+    true
+  );
+
+  console.log("priority", priority);
+
+  // get parts
+  const { data: parts } = usefetchData(
+    ["parts"],
+    `/Parts/GetAllParts`,
+    {},
+    "Couldn't get parts data. Please try again!",
+    true
+  );
+
+  // get parts location
+  const { data: partLocation } = usefetchData(
+    ["partLocation"],
+    `/Locations/LocationsList`,
+    {},
+    "Couldn't get part locations data. Please try again!",
+    true
+  );
+
+  // get checklist data
+  const { data: checklist } = usefetchData(
+    ["checklist"],
+    `/Checklists/GetChecklists?PageNumber=1&PageSize=100`,
+    {},
+    "Couldn't get part checklist data. Please try again!",
+    true
+  );
+
+  console.log("work data", categoryofworkId);
 
   //category of work search input
   const [workSearch, setWorkSearch] = useState("");
@@ -80,38 +148,104 @@ const WorkOrderDetails = () => {
   const [assignWorkerSearch, setAssignWorkerSearch] = useState("");
 
   //filter category of work data
-  const filteredWorkData = workData.filter((item) => {
-    return item.name.toLowerCase().includes(workSearch.toLowerCase());
-  });
+  const filteredWorkData =
+    workData &&
+    workData.filter((item) => {
+      return item.categoryOfWorkName
+        .toLowerCase()
+        .includes(workSearch.toLowerCase());
+    });
+
   //filter assign team data
-  const filteredTeamData = teamData.filter((item) => {
-    return item.name.toLowerCase().includes(teamSearch.toLowerCase());
-  });
+  const filteredTeamData =
+    teamData &&
+    teamData?.team?.filter((item) => {
+      return item.teamName.toLowerCase().includes(teamSearch.toLowerCase());
+    });
+
+    console.log("team data", teamData)
   //filter assign worker data
-  const filteredAssignWorkerData = assignWorkerData.filter((item) => {
-    return item.name.toLowerCase().includes(assignWorkerSearch.toLowerCase());
-  });
+  const filteredAssignWorkerData =
+    assignWorkerData &&
+    assignWorkerData.filter((item) => {
+      return item?.name
+        .toLowerCase()
+        .includes(assignWorkerSearch.toLowerCase());
+    });
+
   //filter project parts data
   const filteredProjectParts = projectParts.filter((item) => {
     return item.part.toLowerCase().includes(partSearch.toLowerCase());
   });
 
+  //filter checklist by search
+  const filteredCheckList = checklist?.data?.filter((check) =>
+    check.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const handleTitleChange = (e) => {
+    dispatch(setTicketTitle(e.target.value));
+  };
+
+  const handleDescriptionChange = (e) => {
+    dispatch(setTicketDescription(e.target.value));
+  };
+
   const handleWorkSelect = (eventKey) => {
-    setselectedWork(eventKey);
-    setSelectValue({ ...selectValue, category: eventKey });
+
+    alert(locationId)
+    const category = workData.find(
+      (item) => item.categoryOfWorkName === eventKey
+    );
+    setselectedWork(category.categoryOfWorkName);
+    setCategoryOfWorkId(category.id);
+    setSelectValue({ ...selectValue, category: category.categoryOfWorkName });
+    dispatch(
+      setCategory({
+        categoryOfWork: category.categoryOfWorkName,
+        categoryOfWorkId: category.id,
+      })
+
+    );
     setWorkSearch("");
   };
+
+  console.log("Category ofwork", categoryofworkId)
+
+
+
   const handleTeamSelect = (eventKey) => {
-    setselectedTeam(eventKey);
+    const team = teamData.find((item) => item.teamName === eventKey);
+    setselectedTeam(team.teamName);
+    setTeamId(team.id);
     setSelectValue({ ...selectValue, assignTeam: eventKey });
+    dispatch(setAssignedTeam({ name: team.categoryOfWorkName, id: team.id }));
     setTeamSearch("");
   };
+
   const handleAssignWorkerSelect = (eventKey) => {
     setselectedAssignWorker(eventKey);
     setSelectValue({ ...selectValue, assignAdditionalTeam: eventKey });
     setAssignWorkerSearch("");
   };
 
+  const handleChecklistSelect = (event) => {
+    const checklistId = parseInt(event.target.value);
+    if (event.target.checked) {
+      dispatch(addChecklistId(checklistId));
+    } else {
+      dispatch(removeChecklistId(checklistId));
+    }
+  };
+
+  const selectedChecklistNames = formState.checklistIds.map((id) => {
+    const checklistItem = checklist?.data?.find((item) => item.id === id);
+    return checklistItem ? checklistItem.name : "";
+  });
+
+  useEffect(() => {
+    setSearch("");
+  }, [formState.checklistIds]);
   return (
     <>
       <div className="order-details-content pb-lg-4">
@@ -120,11 +254,19 @@ const WorkOrderDetails = () => {
         <div className="row details-forms-one pt-5">
           <div className="col-md-6">
             <label>Work Order Title</label>
-            <input type="text" />
+            <input
+              type="text"
+              value={formState.ticketTitle}
+              onChange={handleTitleChange}
+            />
           </div>
           <div className="col-md-6">
             <label>Description</label>
-            <textarea name="Description"></textarea>
+            <textarea
+              name="Description"
+              value={formState.ticketDescription}
+              onChange={handleDescriptionChange}
+            ></textarea>
           </div>
           <div className="col-md-6">
             <label>Category of Work</label>
@@ -134,7 +276,7 @@ const WorkOrderDetails = () => {
                   selectedWork !== "Select" ? "selected" : ""
                 }`}
               >
-                {selectedWork}
+                {formState.categoryOfWork}
               </Dropdown.Toggle>
               <Dropdown.Menu>
                 <form className="dropdown-search">
@@ -149,11 +291,15 @@ const WorkOrderDetails = () => {
                   />
                 </form>
                 <div className="dropdown-item-content">
-                  {filteredWorkData.map((item, index) => (
-                    <Dropdown.Item key={index} eventKey={item.name}>
-                      {item.name}
-                    </Dropdown.Item>
-                  ))}
+                  {filteredWorkData &&
+                    filteredWorkData.map((item, index) => (
+                      <Dropdown.Item
+                        key={index}
+                        eventKey={item.categoryOfWorkName}
+                      >
+                        {item.categoryOfWorkName}
+                      </Dropdown.Item>
+                    ))}
                 </div>
               </Dropdown.Menu>
             </Dropdown>
@@ -161,38 +307,23 @@ const WorkOrderDetails = () => {
           <div className="col-md-6">
             <label>Priority</label>
             <ul className="priority-list">
-              <li>
-                <button
-                  className={selectedPriority === "Low" ? "active" : ""}
-                  onClick={() => handlePriorityClick("Low")}
-                >
-                  Low
-                </button>
-              </li>
-              <li>
-                <button
-                  className={selectedPriority === "Medium" ? "active" : ""}
-                  onClick={() => handlePriorityClick("Medium")}
-                >
-                  Medium
-                </button>
-              </li>
-              <li>
-                <button
-                  className={selectedPriority === "High" ? "active" : ""}
-                  onClick={() => handlePriorityClick("High")}
-                >
-                  High
-                </button>
-              </li>
-              <li>
-                <button
-                  className={selectedPriority === "Critical" ? "active" : ""}
-                  onClick={() => handlePriorityClick("Critical")}
-                >
-                  Critical
-                </button>
-              </li>
+              {priority &&
+                priority.map((p) => (
+                  <li key={p.ticketPrioritiesName}>
+                    <button
+                      className={
+                        formState.ticketPriority === p.ticketPrioritiesName
+                          ? "active"
+                          : ""
+                      }
+                      onClick={() =>
+                        handlePriorityClick(p.ticketPrioritiesName)
+                      }
+                    >
+                      {p.ticketPrioritiesName}
+                    </button>
+                  </li>
+                ))}
             </ul>
           </div>
           <div className="col-md-6">
@@ -218,11 +349,12 @@ const WorkOrderDetails = () => {
                   />
                 </form>
                 <div className="dropdown-item-content">
-                  {filteredTeamData.map((item, index) => (
-                    <Dropdown.Item key={index} eventKey={item.name}>
-                      {item.name}
-                    </Dropdown.Item>
-                  ))}
+                  {filteredTeamData &&
+                    filteredTeamData.map((item, index) => (
+                      <Dropdown.Item key={index} eventKey={item?.teamName}>
+                        {item?.teamName}
+                      </Dropdown.Item>
+                    ))}
                 </div>
               </Dropdown.Menu>
             </Dropdown>
@@ -254,11 +386,12 @@ const WorkOrderDetails = () => {
                     />
                   </form>
                   <div className="dropdown-item-content">
-                    {filteredAssignWorkerData.map((item, index) => (
-                      <Dropdown.Item key={index} eventKey={item.name}>
-                        {item.name}
-                      </Dropdown.Item>
-                    ))}
+                    {filteredAssignWorkerData &&
+                      filteredAssignWorkerData.map((item, index) => (
+                        <Dropdown.Item key={index} eventKey={item?.name}>
+                          {item?.name}
+                        </Dropdown.Item>
+                      ))}
                   </div>
                 </Dropdown.Menu>
               </Dropdown>
@@ -302,10 +435,10 @@ const WorkOrderDetails = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {projectParts.map((part, index) => (
+                  {formState.projectedParts.map((part, index) => (
                     <tr key={index}>
                       <td>
-                        <input readOnly type="text" value={part.part} />
+                        <input readOnly type="text" value={part.partName} />
                       </td>
                       <td>
                         <input readOnly type="number" value={part.quantity} />
@@ -471,6 +604,7 @@ const WorkOrderDetails = () => {
           </div>
         </div>
         <hr />
+
         <div className="row checklists-con">
           <div className="col-lg-12">
             <div className="fs-16 fw-semibold">Tasks and Checklists</div>
@@ -478,7 +612,7 @@ const WorkOrderDetails = () => {
               <button className="btn checklists-btn" data-bs-toggle="dropdown">
                 Add Checklists <DownIcon />
               </button>
-              <ul class="dropdown-menu pb-2">
+              <ul className="dropdown-menu pb-2">
                 <li>
                   <form className="dropdown-search">
                     <button type="submit">
@@ -493,59 +627,62 @@ const WorkOrderDetails = () => {
                   </form>
                 </li>
                 <ul className="dropdown-item-content my-2">
-                  {filteredCheckList.map((check, index) => (
-                    <li key={index}>
-                      <div className="form-check">
-                        <input
-                          className="form-check-input"
-                          type="checkbox"
-                          value=""
-                          id={check.name}
-                        />
-                        <label className="form-check-label" for={check.name}>
-                          {check.name}
-                        </label>
-                      </div>
-                    </li>
-                  ))}
+                  {filteredCheckList &&
+                    filteredCheckList.map((check, index) => (
+                      <li key={index}>
+                        <div className="form-check">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            value={check.id}
+                            id={check.name}
+                            checked={formState.checklistIds.includes(check.id)}
+                            onChange={handleChecklistSelect}
+                          />
+                          <label
+                            className="form-check-label"
+                            htmlFor={check.name}
+                          >
+                            {check.name}
+                          </label>
+                        </div>
+                      </li>
+                    ))}
                 </ul>
               </ul>
             </div>
             <div className="checklists-box">
               <div className="fs-15 checklists-title">Checklists</div>
               <ul className="checklists-list">
-                <li>
-                  <div className="form-check">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      value=""
-                      id="Nozzle"
-                    />
-                    <label className="form-check-label" for="Nozzle">
-                      Pump Nozzle Checklist
-                    </label>
-                  </div>
-                  <button>
-                    <DelateIcon2 />
-                  </button>
-                </li>
-                <li>
-                  <div className="form-check">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      value=""
-                      id="Monitor"
-                    />
-                    <label className="form-check-label" for="Monitor">
-                      Pump Monitor Checklist
-                    </label>
-                  </div>
-                  <button>
-                    <DelateIcon2 />
-                  </button>
-                </li>
+                {selectedChecklistNames.map((name, index) => (
+                  <li key={index}>
+                    <div className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        value=""
+                        id={name}
+                        checked
+                        readOnly
+                      />
+                      <label className="form-check-label" htmlFor={name}>
+                        {name}
+                      </label>
+                    </div>
+                    <button
+                      onClick={() =>
+                        dispatch(
+                          removeChecklistId(
+                            checklist?.data?.find((item) => item.name === name)
+                              ?.id
+                          )
+                        )
+                      }
+                    >
+                      <DelateIcon2 />
+                    </button>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>
@@ -562,42 +699,15 @@ const WorkOrderDetails = () => {
           </Link>
         </div>
       </div>
-      <AddPartsModal show={addPartShow} onHide={() => setAddPartShow(false)} />
+
+      <AddPartsModal
+        show={addPartShow}
+        onHide={() => setAddPartShow(false)}
+        partData={parts}
+        partLocationData={partLocation}
+      />
     </>
   );
 };
-
-const checkList = [
-  {
-    id: 1,
-    name: "Pump Nozzle Checklist",
-    isCompleted: false,
-  },
-  {
-    id: 2,
-    name: "Pump Monitor Checklist",
-    isCompleted: false,
-  },
-  {
-    id: 3,
-    name: "Pump Monitor 1",
-    isCompleted: false,
-  },
-  {
-    id: 4,
-    name: "Pump Monitor 10",
-    isCompleted: false,
-  },
-  {
-    id: 5,
-    name: "Pump Monitor 11",
-    isCompleted: false,
-  },
-  {
-    id: 6,
-    name: "Pump Monitor 12",
-    isCompleted: false,
-  },
-];
 
 export default WorkOrderDetails;

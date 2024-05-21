@@ -10,6 +10,7 @@ const WorkOrderInformation = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedFileType, setSelectedFileType] = useState(null);
 
+
   const handleClose = () => {
     setAttachShow(false);
     setSelectedFile(null);
