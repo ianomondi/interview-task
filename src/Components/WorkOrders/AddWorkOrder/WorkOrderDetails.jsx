@@ -18,6 +18,7 @@ import {
   setTicketPriority,
   addChecklistId,
   removeChecklistId,
+  setSignatureRequired,
 } from "../../../redux/formSlice";
 
 const WorkOrderDetails = () => {
@@ -86,7 +87,7 @@ const WorkOrderDetails = () => {
   );
 
   const { data: teamData } = usefetchData(
-    ["team-data"],
+    ["team-data", categoryofworkId],
     `/Team/GetTeamsToAssignTicket?locationId=${locationId}&categoryofworkId=${categoryofworkId}`,
     {},
     "Couldn't get team data. Please try again!",
@@ -94,7 +95,7 @@ const WorkOrderDetails = () => {
   );
 
   const { data: assignWorkerData } = usefetchData(
-    ["assign-worker"],
+    ["assign-worker", teamId],
     `/Team/GetAllUsersByTeam/${teamId}`,
     {},
     "Couldn't get team data. Please try again!",
@@ -159,19 +160,23 @@ const WorkOrderDetails = () => {
   //filter assign team data
   const filteredTeamData =
     teamData &&
-    teamData?.team?.filter((item) => {
+    teamData?.filter((item) => {
       return item.teamName.toLowerCase().includes(teamSearch.toLowerCase());
     });
 
-    console.log("team data", teamData)
   //filter assign worker data
   const filteredAssignWorkerData =
     assignWorkerData &&
     assignWorkerData.filter((item) => {
-      return item?.name
-        .toLowerCase()
-        .includes(assignWorkerSearch.toLowerCase());
+      const firstName = item?.user?.userFirstName.toLowerCase();
+      const lastName = item?.user?.userLastName.toLowerCase();
+      const fullName = `${firstName} ${lastName}`;
+      const searchTerm = assignWorkerSearch.toLowerCase();
+
+      return fullName.includes(searchTerm);
     });
+
+  console.log("team data", filteredAssignWorkerData);
 
   //filter project parts data
   const filteredProjectParts = projectParts.filter((item) => {
@@ -191,9 +196,16 @@ const WorkOrderDetails = () => {
     dispatch(setTicketDescription(e.target.value));
   };
 
-  const handleWorkSelect = (eventKey) => {
+  const handleSignatureRequiredChange = (e) => {
+    dispatch(setSignatureRequired(e.target.checked));
+  };
 
-    alert(locationId)
+  const handleEstimatedHHoursChange = (e) => {
+    dispatch(setEstimatedHours(e.target.value));
+  };
+
+  const handleWorkSelect = (eventKey) => {
+    alert(locationId);
     const category = workData.find(
       (item) => item.categoryOfWorkName === eventKey
     );
@@ -205,14 +217,11 @@ const WorkOrderDetails = () => {
         categoryOfWork: category.categoryOfWorkName,
         categoryOfWorkId: category.id,
       })
-
     );
     setWorkSearch("");
   };
 
-  console.log("Category ofwork", categoryofworkId)
-
-
+  console.log("Category ofwork", categoryofworkId);
 
   const handleTeamSelect = (eventKey) => {
     const team = teamData.find((item) => item.teamName === eventKey);
@@ -388,8 +397,11 @@ const WorkOrderDetails = () => {
                   <div className="dropdown-item-content">
                     {filteredAssignWorkerData &&
                       filteredAssignWorkerData.map((item, index) => (
-                        <Dropdown.Item key={index} eventKey={item?.name}>
-                          {item?.name}
+                        <Dropdown.Item
+                          key={index}
+                          eventKey={item?.user?.userFirstName}
+                        >
+                          {item?.user?.userFirstName} {item?.user?.userLastName}
                         </Dropdown.Item>
                       ))}
                   </div>
@@ -406,7 +418,9 @@ const WorkOrderDetails = () => {
               <input
                 className="form-check-input"
                 type="checkbox"
-                value=""
+                checked={formState.signatureRequiredToCompleteWork}
+                value={formState.signatureRequiredToCompleteWork}
+                onChange={handleSignatureRequiredChange}
                 id="required"
               />
               <label className="form-check-label" for="required">
@@ -416,7 +430,7 @@ const WorkOrderDetails = () => {
           </div>
           <div className="col-md-6">
             <label>Estimate Hours</label>
-            <input type="text" className="input-box" />
+            <input type="text" className="input-box" value={formState.estimatedHours} onChange={handleEstimatedHHoursChange}  />
           </div>
         </div>
         <hr />

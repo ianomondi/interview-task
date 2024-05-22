@@ -72,15 +72,21 @@ const formSlice = createSlice({
     setFiles: (state, action) => {
       state.files = action.payload;
     },
+    addFile: (state, action) => {
+      state.files.push(action.payload);
+    },
+    deleteFile: (state, action) => {
+      state.files = state.files.filter(file => file.fileName !== action.payload);
+    },
     addProjectedPart: (state, action) => {
-        state.projectedParts.push(action.payload);
-      },
-      addChecklistId: (state, action) => {
-        state.checklistIds.push(action.payload);
-      },
-      removeChecklistId: (state, action) => {
-        state.checklistIds = state.checklistIds.filter(id => id !== action.payload);
-      },
+      state.projectedParts.push(action.payload);
+    },
+    addChecklistId: (state, action) => {
+      state.checklistIds.push(action.payload);
+    },
+    removeChecklistId: (state, action) => {
+      state.checklistIds = state.checklistIds.filter(id => id !== action.payload);
+    },
     resetForm: () => initialState,
   },
 });
@@ -100,6 +106,8 @@ export const {
   setTicketPriority,
   setFiles,
   setCategory,
+  addFile,
+  deleteFile,
   addProjectedPart,
   resetForm,
   addChecklistId,

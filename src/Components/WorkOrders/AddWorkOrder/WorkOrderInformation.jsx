@@ -3,13 +3,17 @@ import AttachIcon from "../../../Assets/Icons/AttachIcon";
 import { Link } from "react-router-dom";
 import { Modal } from "react-bootstrap";
 import DeleteIcon from "../../../Assets/Icons/DeleteIcon";
+import { useDispatch, useSelector } from "react-redux";
+import { addFile, deleteFile } from "../../../redux/formSlice";
+import { fileToBase64 } from "../../../utls/convertToBase64";
 
 const WorkOrderInformation = () => {
-  const [attachments, setAttachments] = useState([]);
   const [attachShow, setAttachShow] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedFileType, setSelectedFileType] = useState(null);
 
+  const dispatch = useDispatch();
+  const attachments = useSelector((state) => state.form.files);
 
   const handleClose = () => {
     setAttachShow(false);
@@ -17,41 +21,31 @@ const WorkOrderInformation = () => {
     setSelectedFileType(null);
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const selectedFiles = Array.from(e.target.files);
-    const newFiles = selectedFiles.filter(
-      (file) => !attachments.includes(file.name)
-    );
-    setAttachments((prevAttachments) => [
-      ...prevAttachments,
-      ...newFiles.map((file) => file.name),
-    ]);
+    selectedFiles.forEach(async (file) => {
+      const base64 = await fileToBase64(file);
+      const fileType = file.name.split('.').pop().toLowerCase();
+      const newFile = {
+        encodedFile: base64,
+        fileName: file.name,
+        url: "",
+        fileType: fileType
+      };
+      dispatch(addFile(newFile));
+    });
   };
 
-  const deleteFile = (attachment) => {
-    setAttachments((prevAttachments) =>
-      prevAttachments.filter((file) => file !== attachment)
-    );
+  const deleteFileHandler = (fileName) => {
+    dispatch(deleteFile(fileName));
   };
 
   const handleFileClick = (file) => {
     setSelectedFile(file);
-    const fileType = getFileType(file);
-    setSelectedFileType(fileType);
+    setSelectedFileType(file.fileType);
     setAttachShow(true);
   };
 
-  const getFileType = (fileName) => {
-    const extension = fileName.split(".").pop().toLowerCase();
-    if (["jpg", "jpeg", "png", "gif"].includes(extension)) {
-      return "image";
-    } else if (["mp4", "avi", "mkv"].includes(extension)) {
-      return "video";
-    } else if (["pdf", "doc", "docx"].includes(extension)) {
-      return "document";
-    }
-    return "unknown";
-  };
 
   return (
     <div className="order-details-content pb-lg-4">
@@ -104,10 +98,10 @@ const WorkOrderInformation = () => {
                   style={{ color: "#D57D2A" }}
                   onClick={() => handleFileClick(file)}
                 >
-                  {file.length > 30 ? `${file.substring(0, 30)}...` : file}{" "}
+                  {file?.fileName?.length > 30 ? `${file?.fileName?.substring(0, 30)}...` : file?.fileName}{" "}
                 </button>
                 <button
-                  onClick={() => deleteFile(file)}
+                  onClick={() => deleteFileHandler(file?.fileName)}
                   className="ms-2"
                   style={{ color: "#6C5B51", fontSize: "18px" }}
                 >
@@ -140,27 +134,27 @@ const WorkOrderInformation = () => {
                 {selectedFileType === "document" && "Document"}
               </span>
               <span className="fs-14" style={{ color: "#72777A" }}>
-                {selectedFile}
+                {selectedFile?.fileName}
               </span>
             </div>
             <div className="mt-4 pt-2 d-grid gap-4 modal-forms-content">
               <div className="col-md-12">
                 {selectedFileType === "image" && (
                   <img
-                    src={`/images/${selectedFile}`}
+                    src={selectedFile.encodedFile}
                     alt=""
                     style={{ width: "100%" }}
                   />
                 )}
                 {selectedFileType === "video" && (
                   <video width="100%" height="auto" controls>
-                    <source src={`/images/${selectedFile}`} type="video/mp4" />
+                    <source src={selectedFile.encodedFile} type="video/mp4" />
                   </video>
                 )}
                 {selectedFileType === "document" && (
                   <iframe
                     title="pdf-viewer"
-                    src={`/images/${selectedFile}`}
+                    src={selectedFile.encodedFile}
                     width="100%"
                     height="500px"
                   ></iframe>
@@ -177,8 +171,8 @@ const WorkOrderInformation = () => {
               }}
             >
               <a
-                href={`/images/${selectedFile}`}
-                download
+                href={selectedFile?.encodedFile}
+                download={selectedFile?.fileName}
                 className="cancel-btn download-btn"
                 target="_blank"
                 rel="noopener noreferrer"

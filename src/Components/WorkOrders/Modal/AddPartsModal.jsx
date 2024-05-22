@@ -62,8 +62,6 @@ const AddPartsModal = ({ onHide, show, partData, partLocationData }) => {
 
       dispatch(addProjectedPart(partObject));
       onHide();
-    } else {
-      // Handle validation errors (e.g., show a message to the user)
     }
   };
 
