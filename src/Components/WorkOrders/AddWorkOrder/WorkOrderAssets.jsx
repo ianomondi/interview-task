@@ -14,6 +14,9 @@ const WorkOrderAssets = () => {
     assetCategory: "Select",
     assignAdditionalTeam: "Select",
   });
+  const [workOrderSummary, setWorkOrderSummary] = useRecoilState(
+    store.workOrderSummary
+  );
   const [locatonAndAssetCategoryIds, setlocatonAndAssetCategoryIds] =
     useRecoilState(store.locatonAndAssetCategoryIds);
 
@@ -94,6 +97,10 @@ const WorkOrderAssets = () => {
         selectedLocationId,
         selectedAssetCategoryId,
       ]);
+      setWorkOrderSummary({
+        ...workOrderSummary,
+        locationId: selectedLocationId,
+      });
       const AssetsRes = await apiWorkOrderServices(url, "GET");
       setAssetCheckData(AssetsRes);
     }

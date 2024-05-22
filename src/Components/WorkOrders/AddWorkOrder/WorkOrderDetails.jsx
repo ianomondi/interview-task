@@ -11,6 +11,10 @@ import store from "../../../context";
 import { useRecoilState, useRecoilValue } from "recoil";
 
 const WorkOrderDetails = () => {
+  const [workOrderSummary, setWorkOrderSummary] = useRecoilState(
+    store.workOrderSummary
+  );
+
   const [addPartShow, setAddPartShow] = useRecoilState(store.addPartShow);
   const [selectedWork, setselectedWork] = useRecoilState(store.selectedWork);
   const [selectedTeam, setselectedTeam] = useRecoilState(store.selectedTeam);
@@ -53,6 +57,13 @@ const WorkOrderDetails = () => {
 
   const handlePriorityClick = (priority) => {
     setSelectedPriority(priority);
+    const priorityId = priorityData.find(
+      (item) => item.ticketPrioritiesName === priority
+    ).id;
+    setWorkOrderSummary({
+      ...workOrderSummary,
+      ticketPriorityId: priorityId,
+    });
   };
 
   const [selectValue, setSelectValue] = useState({
@@ -108,6 +119,10 @@ const WorkOrderDetails = () => {
         const [selectedLocationId] = [...selectedLocationAndCategoryId];
         const teamDataUrl = `${GET_TEAMS_ENDPOINT}?locationId=${selectedLocationId}&categoryofworkId=${selectedWorkId}`;
         const teamDataRes = await apiWorkOrderServices(teamDataUrl, "GET");
+        setWorkOrderSummary({
+          ...workOrderSummary,
+          categoryOfWorkId: selectedWorkId,
+        });
         setTeamData(teamDataRes);
       }
     }
@@ -121,6 +136,10 @@ const WorkOrderDetails = () => {
 
       const workersDataUrl = `${GET_WORKERS_ENDPOINT}/${selectedTeamId}`;
       const workersDataRes = await apiWorkOrderServices(workersDataUrl, "GET");
+      setWorkOrderSummary({
+        ...workOrderSummary,
+        assignedTeam: { selectedTeamId, selectedTeam },
+      });
       setAssignWorkerData(workersDataRes);
     }
   };
@@ -183,12 +202,35 @@ const WorkOrderDetails = () => {
   const handleAssignWorkerSelect = (eventKey) => {
     setselectedAssignWorker(eventKey);
     setSelectValue({ ...selectValue, assignAdditionalTeam: eventKey });
+    const workerId = assignWorkerData
+      .map(({ user }) => user)
+      .find((item) => item.userName === eventKey).id;
+    setWorkOrderSummary({
+      ...workOrderSummary,
+      assignedUser: { id: workerId, name: eventKey },
+    });
     setAssignWorkerSearch("");
   };
 
   const handleCheckboxChange = (eventKey) => {
     if (selectedCheckList.includes(eventKey)) return;
     setSelectedCheckList([...selectedCheckList, eventKey]);
+  };
+
+  const updateTitle = (event) => {
+    setWorkOrderTitle(event);
+    setWorkOrderSummary({
+      ...workOrderSummary,
+      ticketTitle: event,
+    });
+  };
+
+  const updateDescription = (event) => {
+    setWorkOrderDescription(event);
+    setWorkOrderSummary({
+      ...workOrderSummary,
+      ticketDescription: event,
+    });
   };
 
   return (
@@ -202,7 +244,7 @@ const WorkOrderDetails = () => {
             <input
               type="text"
               value={workOrderTitle}
-              onChange={(e) => setWorkOrderTitle(e.target.value)}
+              onChange={(e) => updateTitle(e.target.value)}
             />
           </div>
           <div className="col-md-6">
@@ -210,7 +252,7 @@ const WorkOrderDetails = () => {
             <textarea
               name="Description"
               value={workOrderDescription}
-              onChange={(e) => setWorkOrderDescription(e.target.value)}
+              onChange={(e) => updateDescription(e.target.value)}
             ></textarea>
           </div>
           <div className="col-md-6">
