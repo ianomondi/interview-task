@@ -22,7 +22,7 @@ import ViewAssets from "./Components/WorkOrders/ViewWorkOrder/ViewAssets";
 import ViewCostings from "./Components/WorkOrders/ViewWorkOrder/ViewCostings";
 import ViewJob from "./Components/WorkOrders/ViewWorkOrder/ViewJob";
 import ForgotPasswords from "./Pages/ForgotPassword";
-
+import RecoilWrapper from "./context/recoilWrapper";
 
 function App() {
   const Wrapper = ({ children }) => {
@@ -37,108 +37,108 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Wrapper>
-        <Routes>
-          <Route
-            index
-            path="/"
-            element={
-              <div className="root-wrapper">
-                <Navbar />
-                <Login />
-              </div>
-            }
-          />
-          <Route
-            path="/work-orders"
-            element={
-              <div className="root-wrapper">
-                <Navbar />
-                <WorkOrders />
-              </div>
-            }
-          >
-            <Route index path="/work-orders/" element={<NewWork />} />
-            <Route path="/work-orders/ongoing-work" element={<OngoingWork />} />
-            <Route
-              path="/work-orders/pending-closure"
-              element={<PendingClosure />}
-            />
-            <Route path="/work-orders/closed-work" element={<ClosedWork />} />
-            <Route
-              path="/work-orders/upcoming-work"
-              element={<UpcomingWork />}
-            />
-          </Route>
-
-
-          <Route
-            path="/work-orders/add-work-order"
-            element={
-              <div className="root-wrapper">
-                <Navbar />
-                <AddWorkOrder />
-              </div>
-            }
-          >
+      <RecoilWrapper>
+        <Wrapper>
+          <Routes>
             <Route
               index
+              path="/"
+              element={
+                <div className="root-wrapper">
+                  <Navbar />
+                  <Login />
+                </div>
+              }
+            />
+            <Route
+              path="/work-orders"
+              element={
+                <div className="root-wrapper">
+                  <Navbar />
+                  <WorkOrders />
+                </div>
+              }
+            >
+              <Route index path="/work-orders/" element={<NewWork />} />
+              <Route
+                path="/work-orders/ongoing-work"
+                element={<OngoingWork />}
+              />
+              <Route
+                path="/work-orders/pending-closure"
+                element={<PendingClosure />}
+              />
+              <Route path="/work-orders/closed-work" element={<ClosedWork />} />
+              <Route
+                path="/work-orders/upcoming-work"
+                element={<UpcomingWork />}
+              />
+            </Route>
+
+            <Route
               path="/work-orders/add-work-order"
-              element={<WorkOrderAssets />}
-            />
+              element={
+                <div className="root-wrapper">
+                  <Navbar />
+                  <AddWorkOrder />
+                </div>
+              }
+            >
+              <Route
+                index
+                path="/work-orders/add-work-order"
+                element={<WorkOrderAssets />}
+              />
+              <Route
+                path="/work-orders/add-work-order/details"
+                element={<WorkOrderDetails />}
+              />
+              <Route
+                path="/work-orders/add-work-order/information"
+                element={<WorkOrderInformation />}
+              />
+              <Route
+                path="/work-orders/add-work-order/summary"
+                element={<WorkOrderSummary />}
+              />
+            </Route>
+
             <Route
-              path="/work-orders/add-work-order/details"
-              element={<WorkOrderDetails />}
-            />
-            <Route
-              path="/work-orders/add-work-order/information"
-              element={<WorkOrderInformation />}
-            />
-            <Route
-              path="/work-orders/add-work-order/summary"
-              element={<WorkOrderSummary />}
-            />
-          </Route>
-          
-          
-          <Route
-            path="/work-orders/work-view"
-            element={
-              <div className="root-wrapper">
-                <Navbar />
-                <ViewWorkOrder />
-              </div>
-            }
-          >
-            <Route
-              index
               path="/work-orders/work-view"
-              element={<ViewSummary />}
-            />
-            <Route
-              index
-              path="/work-orders/work-view/assets"
-              element={<ViewAssets />}
-            />
-            <Route
-              index
-              path="/work-orders/work-view/costings"
-              element={<ViewCostings />}
-            />
-            <Route
-              index
-              path="/work-orders/work-view/job-cards"
-              element={<ViewJob />}
-            />
-          </Route>
+              element={
+                <div className="root-wrapper">
+                  <Navbar />
+                  <ViewWorkOrder />
+                </div>
+              }
+            >
+              <Route
+                index
+                path="/work-orders/work-view"
+                element={<ViewSummary />}
+              />
+              <Route
+                index
+                path="/work-orders/work-view/assets"
+                element={<ViewAssets />}
+              />
+              <Route
+                index
+                path="/work-orders/work-view/costings"
+                element={<ViewCostings />}
+              />
+              <Route
+                index
+                path="/work-orders/work-view/job-cards"
+                element={<ViewJob />}
+              />
+            </Route>
 
-          <Route path="/sign-in" element={<Login />} />
-          <Route path="/forgot-password" element={<ForgotPasswords />} />
-
-          
-        
-        </Routes>
-      </Wrapper>
+            <Route path="/sign-in" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPasswords />} />
+          </Routes>
+        </Wrapper>
+      </RecoilWrapper>
     </BrowserRouter>
   );
 }

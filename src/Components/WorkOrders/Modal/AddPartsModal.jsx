@@ -1,31 +1,39 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Dropdown } from "react-bootstrap";
 import Modal from "react-bootstrap/Modal";
 import { Link } from "react-router-dom";
 import SearchIcon from "../../../Assets/Icons/SearchIcon";
+import { apiWorkOrderServices } from "../../../utls/services";
+import store from "../../../context";
+import { useRecoilState } from "recoil";
 
 const AddPartsModal = (props) => {
   const [selectedPart, setselectedPart] = useState("Select Part");
+  const [selectedQuantity, setselectedQuantity] = useState(null);
   const [selectedPartLocation, setselectedPartLocation] = useState(
     "Select location of part"
   );
+  const [projectParts, setProjectParts] = useRecoilState(store.projectParts);
+  const [partData, setPartData] = useState([]);
+  const [partLocationData, setPartLocationData] = useState([]);
 
-  //Dummy part and location data
-  const partData = [
-    { name: "Select  " },
-    { name: "Part" },
-    { name: "Part 2" },
-    { name: "Part 3" },
-    { name: "Part 4" },
-  ];
-  const partLocationData = [
-    { name: "Select  " },
-    { name: "location  " },
-    { name: "Part" },
-    { name: "location 2" },
-    { name: "location 3" },
-    { name: "location 4" },
-  ];
+  // endPoints
+  const GET_PARTS_ENDPOINT = "Parts/GetAllParts";
+  const GET_PARTS_LOCATION_ENDPOINT = "Locations/LocationsList";
+
+  const updateFormData = async () => {
+    const partDataRes = await apiWorkOrderServices(GET_PARTS_ENDPOINT, "GET");
+    const partLocationDataRes = await apiWorkOrderServices(
+      GET_PARTS_LOCATION_ENDPOINT,
+      "GET"
+    );
+    setPartData(partDataRes);
+    setPartLocationData(partLocationDataRes);
+  };
+
+  useEffect(() => {
+    updateFormData();
+  }, []);
 
   //part location search input
   const [partLocationSearch, setPartLocationSearch] = useState("");
@@ -34,10 +42,12 @@ const AddPartsModal = (props) => {
 
   //filter part and location data
   const filteredPartData = partData.filter((item) => {
-    return item.name.toLowerCase().includes(partSearch.toLowerCase());
+    return item.partName.toLowerCase().includes(partSearch.toLowerCase());
   });
   const filteredPartLocationData = partLocationData.filter((item) => {
-    return item.name.toLowerCase().includes(partLocationSearch.toLowerCase());
+    return item.locationName
+      .toLowerCase()
+      .includes(partLocationSearch.toLowerCase());
   });
 
   const handlePartSelect = (eventKey) => {
@@ -47,6 +57,20 @@ const AddPartsModal = (props) => {
   const handlePartLocationSelect = (eventKey) => {
     setselectedPartLocation(eventKey);
     setPartLocationSearch("");
+  };
+
+  const handleSubmitParts = () => {
+    if (selectedPart !== "Select Part" && selectedQuantity !== null) {
+      const selectedPartId = partData.find(
+        (item) => item.partName === selectedPart
+      ).id;
+      const part = {
+        id: selectedPartId,
+        part: selectedPart,
+        quantity: selectedQuantity,
+      };
+      setProjectParts([...projectParts, part]);
+    }
   };
 
   return (
@@ -90,8 +114,8 @@ const AddPartsModal = (props) => {
                   </form>
                   <div className="dropdown-item-content">
                     {filteredPartData.map((item, index) => (
-                      <Dropdown.Item key={index} eventKey={item.name}>
-                        {item.name}
+                      <Dropdown.Item key={index} eventKey={item.partName}>
+                        {item.partName}
                       </Dropdown.Item>
                     ))}
                   </div>
@@ -102,7 +126,7 @@ const AddPartsModal = (props) => {
               <label className="fw-medium pb-2">Quantity</label>
               <input
                 className="modal-input-box"
-                type="text"
+                type="number"
                 style={{
                   background: "#F1EFEF",
                   width: "100%",
@@ -112,6 +136,7 @@ const AddPartsModal = (props) => {
                   padding: "0 15px",
                 }}
                 placeholder="Enter quantity required"
+                onChange={(e) => setselectedQuantity(e.target.value)}
               />
             </div>
             <div className="col-md-12">
@@ -144,8 +169,8 @@ const AddPartsModal = (props) => {
                   </form>
                   <div className="dropdown-item-content">
                     {filteredPartLocationData.map((item, index) => (
-                      <Dropdown.Item key={index} eventKey={item.name}>
-                        {item.name}
+                      <Dropdown.Item key={index} eventKey={item.locationName}>
+                        {item.locationName}
                       </Dropdown.Item>
                     ))}
                   </div>
@@ -166,7 +191,14 @@ const AddPartsModal = (props) => {
             <button className="cancel-btn" onClick={props.onHide}>
               Cancel
             </button>
-            <Link to="" className="delate-btn" onClick={props.onHide}>
+            <Link
+              to=""
+              className="delate-btn"
+              onClick={() => {
+                handleSubmitParts();
+                props.onHide();
+              }}
+            >
               Add
             </Link>
           </div>

@@ -1,8 +1,13 @@
 import React, { useState } from "react";
 import { Modal } from "react-bootstrap";
 import { Link } from "react-router-dom";
+import store from "../../../context";
+import { useRecoilState } from "recoil";
 
 const WorkOrderSummary = () => {
+  const [workOrderAssets, setWorkOrderAssets] = useRecoilState(
+    store.workOrderAssets
+  );
   const [imageShow, setImageShow] = useState(false);
   const [videoShow, setVideoShow] = useState(false);
   const [documentShow, setDocumentShow] = useState(false);
@@ -11,7 +16,7 @@ const WorkOrderSummary = () => {
     setVideoShow(false);
     setDocumentShow(false);
   };
-
+  console.log("I am work order summary", workOrderAssets);
   return (
     <>
       <div className="order-details-content pb-lg-4">

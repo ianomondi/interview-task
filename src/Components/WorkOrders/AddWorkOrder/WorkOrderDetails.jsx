@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import DownIcon from "../../../Assets/Icons/DownIcon";
 import SearchIcon from "../../../Assets/Icons/SearchIcon";
 import AddPartsModal from "../Modal/AddPartsModal";
@@ -6,20 +6,29 @@ import { Link } from "react-router-dom";
 import EditIcon2 from "../../../Assets/Icons/EditIcon2";
 import DelateIcon2 from "../../../Assets/Icons/DelateIcon2";
 import { Dropdown, Modal } from "react-bootstrap";
+import { apiWorkOrderServices } from "../../../utls/services";
+import store from "../../../context";
+import { useRecoilState, useRecoilValue } from "recoil";
 
 const WorkOrderDetails = () => {
   const [addPartShow, setAddPartShow] = useState(false);
   const [selectedWork, setselectedWork] = useState("Select");
   const [selectedTeam, setselectedTeam] = useState("Select");
   const [selectedAssignWorker, setselectedAssignWorker] = useState("Select");
-  const [selectedPart, setselectedPart] = useState("Part B - 200008");
+  const [selectedPart, setSelectedPart] = useState([]);
+  const [workData, setworkData] = useState([]);
+  const [priorityData, setPriorityData] = useState([]);
+  const [teamData, setTeamData] = useState([]);
+  const [assignWorkerData, setAssignWorkerData] = useState([]);
+  const [checklistItemsData, setChecklistItemsData] = useState([]);
+  const [selectedCheckList, setSelectedCheckList] = useState([]);
+  const [isChecked, setIsChecked] = useState(false);
+  const [estimateHours, setEstimateHours] = useState(null);
+  const [isSigned, setIsSigned] = useState(false);
   //part search input
   const [partSearch, setPartSearch] = useState("");
 
-  const [projectParts, setProjectParts] = useState([
-    { id: 1, part: "Part A - 100005", quantity: 3 },
-    { id: 2, part: "Part B - 200008", quantity: 6 },
-  ]);
+  const [projectParts, setProjectParts] = useRecoilState(store.projectParts);
   const [show, setShow] = useState(false);
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
@@ -38,40 +47,83 @@ const WorkOrderDetails = () => {
     assignTeam: "Select",
     assignAdditionalTeam: "Select",
   });
-
-  //filter checklist by search
-  const filteredCheckList = checkList.filter((check) =>
-    check.name.toLowerCase().includes(search.toLowerCase())
+  const selectedLocationAndCategoryId = useRecoilValue(
+    store.locatonAndAssetCategoryIds
   );
 
+  //Endpoints
+  const CATEGORY_OF_WORKS = "CategoryOfWorks";
+  const PRIORITY_ENDPOINT = "Tickets/GetAllTicketPriorities";
+  const GET_TEAMS_ENDPOINT = "Team/GetTeamsToAssignTicket";
+  const GET_WORKERS_ENDPOINT = "Team/GetAllUsersByTeam";
+  const CHECKLIST_ENDPOINT =
+    "Checklists/GetChecklists?PageNumber=1&PageSize=100";
+
   const handlePartSelect = (eventKey) => {
-    setselectedPart(eventKey);
+    setSelectedPart(eventKey);
     setSelectValue({ ...selectValue, part: eventKey });
   };
 
-  //Dummy data
-  const workData = [
-    { name: "Category " },
-    { name: "Work" },
-    { name: "Type" },
-    { name: "Priority" },
-    { name: "Status" },
-  ];
-  const teamData = [
-    { name: "Assign " },
-    { name: "Team" },
-    { name: "Primary" },
-    { name: "Secondary" },
-    { name: "Tertiary" },
-  ];
-  const assignWorkerData = [
-    { name: "Assign " },
-    { name: "Worker " },
-    { name: "Primary" },
-    { name: "Secondary" },
-    { name: "Tertiary" },
-  ];
+  const updateFormData = async () => {
+    const categoryOfWorkRes = await apiWorkOrderServices(
+      CATEGORY_OF_WORKS,
+      "GET"
+    );
 
+    const priorityDataRes = await apiWorkOrderServices(
+      PRIORITY_ENDPOINT,
+      "GET"
+    );
+
+    const checklistItemsDataRes = await apiWorkOrderServices(
+      CHECKLIST_ENDPOINT,
+      "GET"
+    );
+
+    setChecklistItemsData(checklistItemsDataRes.data);
+    setworkData(categoryOfWorkRes);
+    setPriorityData(priorityDataRes);
+  };
+
+  const updateTeamsList = async (selectedWork) => {
+    if (selectedWork !== "Select") {
+      const selectedWorkId = workData.find(
+        (item) => item.categoryOfWorkName === selectedWork
+      ).id;
+      if (selectedLocationAndCategoryId.length > 0) {
+        const [selectedLocationId] = [...selectedLocationAndCategoryId];
+        const teamDataUrl = `${GET_TEAMS_ENDPOINT}?locationId=${selectedLocationId}&categoryofworkId=${selectedWorkId}`;
+        const teamDataRes = await apiWorkOrderServices(teamDataUrl, "GET");
+        setTeamData(teamDataRes);
+      }
+    }
+  };
+
+  const updateWorkerList = async (selectedTeam) => {
+    if (selectedTeam !== "Select") {
+      const selectedTeamId = teamData.find(
+        (item) => item.teamName === selectedTeam
+      ).id;
+
+      const workersDataUrl = `${GET_WORKERS_ENDPOINT}/${selectedTeamId}`;
+      const workersDataRes = await apiWorkOrderServices(workersDataUrl, "GET");
+      setAssignWorkerData(workersDataRes);
+    }
+  };
+
+  useEffect(() => {
+    updateFormData();
+  }, []);
+
+  useEffect(() => {
+    updateTeamsList(selectedWork);
+  }, [selectedWork]);
+
+  useEffect(() => {
+    updateWorkerList(selectedTeam);
+  }, [selectedTeam]);
+
+  console.log(isSigned);
   //category of work search input
   const [workSearch, setWorkSearch] = useState("");
   //asign team search input
@@ -79,18 +131,27 @@ const WorkOrderDetails = () => {
   //asign worker search input
   const [assignWorkerSearch, setAssignWorkerSearch] = useState("");
 
+  //filter checklist by search
+  const filteredCheckList = checklistItemsData.filter((check) =>
+    check.name.toLowerCase().includes(search.toLowerCase())
+  );
   //filter category of work data
   const filteredWorkData = workData.filter((item) => {
-    return item.name.toLowerCase().includes(workSearch.toLowerCase());
+    return item.categoryOfWorkName
+      .toLowerCase()
+      .includes(workSearch.toLowerCase());
   });
   //filter assign team data
   const filteredTeamData = teamData.filter((item) => {
-    return item.name.toLowerCase().includes(teamSearch.toLowerCase());
+    return item.teamName.toLowerCase().includes(teamSearch.toLowerCase());
   });
   //filter assign worker data
-  const filteredAssignWorkerData = assignWorkerData.filter((item) => {
-    return item.name.toLowerCase().includes(assignWorkerSearch.toLowerCase());
-  });
+  const filteredAssignWorkerData = assignWorkerData
+    .map(({ user }) => user.userName)
+    .filter((userName) =>
+      userName.toLowerCase().includes(assignWorkerSearch.toLowerCase())
+    );
+
   //filter project parts data
   const filteredProjectParts = projectParts.filter((item) => {
     return item.part.toLowerCase().includes(partSearch.toLowerCase());
@@ -112,6 +173,14 @@ const WorkOrderDetails = () => {
     setAssignWorkerSearch("");
   };
 
+  const handleCheckboxChange = (eventKey) => {
+    if (selectedCheckList.includes(eventKey)) return;
+    setSelectedCheckList([...selectedCheckList, eventKey]);
+  };
+
+  // console.log("selectedPart", projectParts);
+  // console.log(checklistItemsData);
+  // console.log(checklistItemsData);
   return (
     <>
       <div className="order-details-content pb-lg-4">
@@ -150,8 +219,11 @@ const WorkOrderDetails = () => {
                 </form>
                 <div className="dropdown-item-content">
                   {filteredWorkData.map((item, index) => (
-                    <Dropdown.Item key={index} eventKey={item.name}>
-                      {item.name}
+                    <Dropdown.Item
+                      key={index}
+                      eventKey={item.categoryOfWorkName}
+                    >
+                      {item.categoryOfWorkName}
                     </Dropdown.Item>
                   ))}
                 </div>
@@ -161,38 +233,22 @@ const WorkOrderDetails = () => {
           <div className="col-md-6">
             <label>Priority</label>
             <ul className="priority-list">
-              <li>
-                <button
-                  className={selectedPriority === "Low" ? "active" : ""}
-                  onClick={() => handlePriorityClick("Low")}
-                >
-                  Low
-                </button>
-              </li>
-              <li>
-                <button
-                  className={selectedPriority === "Medium" ? "active" : ""}
-                  onClick={() => handlePriorityClick("Medium")}
-                >
-                  Medium
-                </button>
-              </li>
-              <li>
-                <button
-                  className={selectedPriority === "High" ? "active" : ""}
-                  onClick={() => handlePriorityClick("High")}
-                >
-                  High
-                </button>
-              </li>
-              <li>
-                <button
-                  className={selectedPriority === "Critical" ? "active" : ""}
-                  onClick={() => handlePriorityClick("Critical")}
-                >
-                  Critical
-                </button>
-              </li>
+              {priorityData.map((item, index) => (
+                <li key={index}>
+                  <button
+                    className={
+                      selectedPriority === item.ticketPrioritiesName
+                        ? "active"
+                        : ""
+                    }
+                    onClick={() =>
+                      handlePriorityClick(item.ticketPrioritiesName)
+                    }
+                  >
+                    {item.ticketPrioritiesName}
+                  </button>
+                </li>
+              ))}
             </ul>
           </div>
           <div className="col-md-6">
@@ -219,8 +275,8 @@ const WorkOrderDetails = () => {
                 </form>
                 <div className="dropdown-item-content">
                   {filteredTeamData.map((item, index) => (
-                    <Dropdown.Item key={index} eventKey={item.name}>
-                      {item.name}
+                    <Dropdown.Item key={index} eventKey={item.teamName}>
+                      {item.teamName}
                     </Dropdown.Item>
                   ))}
                 </div>
@@ -255,8 +311,8 @@ const WorkOrderDetails = () => {
                   </form>
                   <div className="dropdown-item-content">
                     {filteredAssignWorkerData.map((item, index) => (
-                      <Dropdown.Item key={index} eventKey={item.name}>
-                        {item.name}
+                      <Dropdown.Item key={index} eventKey={item}>
+                        {item}
                       </Dropdown.Item>
                     ))}
                   </div>
@@ -275,6 +331,8 @@ const WorkOrderDetails = () => {
                 type="checkbox"
                 value=""
                 id="required"
+                checked={isSigned}
+                onChange={(e) => setIsSigned(e.target.checked)}
               />
               <label className="form-check-label" for="required">
                 Technician signature required
@@ -283,7 +341,11 @@ const WorkOrderDetails = () => {
           </div>
           <div className="col-md-6">
             <label>Estimate Hours</label>
-            <input type="text" className="input-box" />
+            <input
+              type="number"
+              className="input-box"
+              onChange={(e) => setEstimateHours(e.target.value)}
+            />
           </div>
         </div>
         <hr />
@@ -501,6 +563,8 @@ const WorkOrderDetails = () => {
                           type="checkbox"
                           value=""
                           id={check.name}
+                          checked={selectedCheckList.includes(check.name)}
+                          onChange={() => handleCheckboxChange(check.name)}
                         />
                         <label className="form-check-label" for={check.name}>
                           {check.name}
@@ -514,38 +578,26 @@ const WorkOrderDetails = () => {
             <div className="checklists-box">
               <div className="fs-15 checklists-title">Checklists</div>
               <ul className="checklists-list">
-                <li>
-                  <div className="form-check">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      value=""
-                      id="Nozzle"
-                    />
-                    <label className="form-check-label" for="Nozzle">
-                      Pump Nozzle Checklist
-                    </label>
-                  </div>
-                  <button>
-                    <DelateIcon2 />
-                  </button>
-                </li>
-                <li>
-                  <div className="form-check">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      value=""
-                      id="Monitor"
-                    />
-                    <label className="form-check-label" for="Monitor">
-                      Pump Monitor Checklist
-                    </label>
-                  </div>
-                  <button>
-                    <DelateIcon2 />
-                  </button>
-                </li>
+                {selectedCheckList.map((item, index) => (
+                  <li key={index}>
+                    <div className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        value=""
+                        id={item}
+                        checked={isChecked}
+                        onChange={() => setIsChecked(!isChecked)}
+                      />
+                      <label className="form-check-label" for={item}>
+                        {item}
+                      </label>
+                    </div>
+                    <button>
+                      <DelateIcon2 />
+                    </button>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>

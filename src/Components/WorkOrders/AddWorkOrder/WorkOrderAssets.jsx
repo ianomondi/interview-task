@@ -1,8 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import DownIcon from "../../../Assets/Icons/DownIcon";
 import { Link } from "react-router-dom";
 import Dropdown from "react-bootstrap/Dropdown";
 import SearchIcon from "../../../Assets/Icons/SearchIcon";
+import store from "../../../context";
+import { useRecoilState } from "recoil";
+import { apiWorkOrderServices } from "../../../utls/services";
 
 const WorkOrderAssets = () => {
   const [selectValue, setSelectValue] = useState({
@@ -11,17 +14,30 @@ const WorkOrderAssets = () => {
     assetCategory: "Select",
     assignAdditionalTeam: "Select",
   });
+  const [workOrderAssets, setWorkOrderAssets] = useRecoilState(
+    store.workOrderAssets
+  );
+  const [locatonAndAssetCategoryIds, setlocatonAndAssetCategoryIds] =
+    useRecoilState(store.locatonAndAssetCategoryIds);
 
   const [selectedAssets, setSelectedAssets] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState("Select");
   const [selectedAssetCategory, setSelectedAssetCategory] = useState("Select");
 
+  // Form Data
+  const [locationData, setLocationData] = useState([]);
+  const [assetData, setAssetData] = useState([]);
+  const [assetCheckData, setAssetCheckData] = useState([]);
   //location search input
   const [locationSearch, setLocationSearch] = useState("");
   //asset category search input
   const [assetSearch, setAssetSearch] = useState("");
   //asset search input
   const [assetCheckSearch, setAssetCheckSearch] = useState("");
+
+  const LOCATION_ENDPOINT = "Locations/LocationsList";
+  const ASSETS_CATEGORIES_ENDPOINT = "Assets/Categories";
+  const ASSETS_ENDPOINT = "Assets/GetAssetsByLocationAndCategory";
 
   const handleCheckboxChange = (asset) => {
     setSelectedAssets((prevSelectedAssets) => {
@@ -47,45 +63,62 @@ const WorkOrderAssets = () => {
     setAssetSearch("");
   };
 
-  //Dummy location and asset data
-  const locationData = [
-    { name: "Mavoko Station" },
-    { name: "Kisaju Station" },
-    { name: "Kajiado Station" },
-    { name: "Kitengela Station" },
-    { name: "Athi River Station" },
-    { name: "Nairobi Station" },
-  ];
-  const assetData = [
-    { name: "Asset" },
-    { name: "Category" },
-    { name: "Type" },
-    { name: "Location" },
-    { name: "Status 2" },
-    { name: "Status 3" },
-    { name: "Status 4" },
-    { name: "Status 5" },
-  ];
-  const assetCheckData = [
-    { name: "Pump 1" },
-    { name: "Pump 2" },
-    { name: "Pump 3" },
-    { name: "Pump 4" },
-    { name: "Pump 5" },
-    { name: "Pump 6" },
-  ];
+  const updateFormData = async () => {
+    const LocationDataRes = await apiWorkOrderServices(
+      LOCATION_ENDPOINT,
+      "GET"
+    );
+    const AssetCategoriesRes = await apiWorkOrderServices(
+      ASSETS_CATEGORIES_ENDPOINT,
+      "GET"
+    );
+    setLocationData(LocationDataRes);
+    setAssetData(AssetCategoriesRes);
+  };
+
+  const updateAssetsList = async (selectedLocation, selectedAssetCategory) => {
+    if (selectedLocation !== "Select" && selectedAssetCategory !== "Select") {
+      const selectedLocationId = locationData.find(
+        (item) => item.locationName === selectedLocation
+      ).id;
+      const selectedAssetCategoryId = assetData.find(
+        (item) => item.assetCategoryName === selectedAssetCategory
+      ).id;
+      const url = `${ASSETS_ENDPOINT}/${selectedLocationId}/${selectedAssetCategoryId}`;
+      setlocatonAndAssetCategoryIds([
+        selectedLocationId,
+        selectedAssetCategoryId,
+      ]);
+      const AssetsRes = await apiWorkOrderServices(url, "GET");
+      setAssetCheckData(AssetsRes);
+    }
+  };
+
+  useEffect(() => {
+    updateFormData();
+  }, []);
+
+  useEffect(() => {
+    updateAssetsList(selectedLocation, selectedAssetCategory);
+  }, [selectedLocation, selectedAssetCategory]);
 
   //Filter location data
   const filteredLocationData = locationData.filter((item) => {
-    return item.name.toLowerCase().includes(locationSearch.toLowerCase());
+    return item.locationName
+      .toLowerCase()
+      .includes(locationSearch.toLowerCase());
   });
   //Filter asset data
   const filteredAssetData = assetData.filter((item) => {
-    return item.name.toLowerCase().includes(assetSearch.toLowerCase());
+    return item.assetCategoryName
+      .toLowerCase()
+      .includes(assetSearch.toLowerCase());
   });
   //Filter asset check data
   const filteredAssetCheckData = assetCheckData.filter((item) => {
-    return item.name.toLowerCase().includes(assetCheckSearch.toLowerCase());
+    return item.assetName
+      .toLowerCase()
+      .includes(assetCheckSearch.toLowerCase());
   });
 
   return (
@@ -122,8 +155,8 @@ const WorkOrderAssets = () => {
               </form>
               <div className="dropdown-item-content">
                 {filteredLocationData.map((item, index) => (
-                  <Dropdown.Item key={index} eventKey={item.name}>
-                    {item.name}
+                  <Dropdown.Item key={index} eventKey={item.locationName}>
+                    {item.locationName}
                   </Dropdown.Item>
                 ))}
               </div>
@@ -158,8 +191,8 @@ const WorkOrderAssets = () => {
               </form>
               <div className="dropdown-item-content">
                 {filteredAssetData.map((item, index) => (
-                  <Dropdown.Item key={index} eventKey={item.name}>
-                    {item.name}
+                  <Dropdown.Item key={index} eventKey={item.assetCategoryName}>
+                    {item.assetCategoryName}
                   </Dropdown.Item>
                 ))}
               </div>
@@ -206,15 +239,17 @@ const WorkOrderAssets = () => {
                             className="form-check-input"
                             type="checkbox"
                             value=""
-                            id={item.name}
-                            checked={selectedAssets.includes(item.name)}
-                            onChange={() => handleCheckboxChange(item.name)}
+                            id={item.assetName}
+                            checked={selectedAssets.includes(item.assetName)}
+                            onChange={() =>
+                              handleCheckboxChange(item.assetName)
+                            }
                           />
                           <label
                             className="form-check-label"
-                            htmlFor={item.name}
+                            htmlFor={item.assetName}
                           >
-                            {item.name}
+                            {item.assetName}
                           </label>
                         </div>
                       </li>
