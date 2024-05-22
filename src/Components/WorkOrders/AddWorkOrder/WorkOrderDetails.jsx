@@ -30,7 +30,7 @@ const WorkOrderDetails = () => {
   const [selectedAssignWorker, setselectedAssignWorker] = useState("Select");
   const [selectedPart, setselectedPart] = useState("Part B - 200008");
   const [teamId, setTeamId] = useState(null);
-  const [categoryofworkId, setCategoryOfWorkId] = useState(null);
+  const [categoryofworkId, setCategoryOfWorkId] = useState(formState.categoryOfWorkId);
   //part search input
   const [partSearch, setPartSearch] = useState("");
 
@@ -640,6 +640,9 @@ const WorkOrderDetails = () => {
                     />
                   </form>
                 </li>
+                
+
+                
                 <ul className="dropdown-item-content my-2">
                   {filteredCheckList &&
                     filteredCheckList.map((check, index) => (

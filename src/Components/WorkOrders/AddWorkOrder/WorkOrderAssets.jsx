@@ -9,6 +9,7 @@ import {
   setAssetCategory,
   setLocation,
   setSelectedAssets,
+  addSelectedAssets
 } from "../../../redux/formSlice";
 
 const WorkOrderAssets = () => {
@@ -26,9 +27,9 @@ const WorkOrderAssets = () => {
 
   const [selectedAssets, setSelectedAssets] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState("Select");
-  const [selectedLocationId, setSelectedLocationId] = useState(null);
+  const [selectedLocationId, setSelectedLocationId] = useState(formState.locationId);
   const [selectedAssetCategory, setSelectedAssetCategory] = useState("Select");
-  const [selectedAssetCategoryId, setSelectedAssetCategoryId] = useState(null);
+  const [selectedAssetCategoryId, setSelectedAssetCategoryId] = useState(formState.assetCategoryId);
 
   //location search input
   const [locationSearch, setLocationSearch] = useState("");
@@ -45,7 +46,7 @@ const WorkOrderAssets = () => {
   const handleCheckboxChange = (assetName) => {
     const asset = assetCheckData.find((item) => item.assetName === assetName);
 
-    if (!asset) return; // If asset not found, exit the function
+    if (!asset) return;
 
     const assetId = asset.id;
     setSelectedAssets((prevSelectedAssets) => {
@@ -57,15 +58,19 @@ const WorkOrderAssets = () => {
         return [...prevSelectedAssets, assetName];
       }
     });
+
     const updatedAssets = formState.selectedAssets.includes(assetId)
       ? formState.selectedAssets.filter(
           (selectedAssetId) => selectedAssetId !== assetId
         )
       : [...formState.selectedAssets, assetId];
+  };
 
-    console.log("updated assets", updatedAssets);
-
-    // dispatch(setSelectedAssets(updatedAssets));
+  const handleChecklistSelect = (event) => {
+    const checklistId = parseInt(event.target.value);
+    if (event.target.checked) {
+      dispatch(addSelectedAssets(checklistId));
+    }
   };
 
   const handleLocationSelect = (eventKey, event) => {
@@ -122,7 +127,7 @@ const WorkOrderAssets = () => {
     `/Assets/GetAssetsByLocationAndCategory/${selectedLocationId}/${selectedAssetCategoryId}`,
     {},
     "Couldn't get asset data. Please try again!",
-    !!selectedLocationId && !!selectedAssetCategoryId // Fetch data only when both IDs are available
+    !!selectedLocationId && !!selectedAssetCategoryId
   );
 
   // Filter location data
@@ -235,8 +240,8 @@ const WorkOrderAssets = () => {
             </Dropdown.Menu>
           </Dropdown>
         </div>
-        {selectValue.location !== "Select" &&
-          selectValue.assetCategory !== "Select" && (
+        {formState.location !== "" &&
+          formState.assetCategory !== "" && (
             <div className="col-md-6">
               <label>Asset (s)</label>
 
@@ -246,12 +251,12 @@ const WorkOrderAssets = () => {
                   data-bs-toggle="dropdown"
                 >
                   <div>
-                    Select {"  "}
+                    Select
                     {selectedAssets.length > 0 && (
                       <span style={{ color: "#000" }}>
                         {selectedAssets.join(", ")}
                       </span>
-                    )}{" "}
+                    )}
                   </div>
                   <DownIcon />
                 </button>
@@ -275,12 +280,16 @@ const WorkOrderAssets = () => {
                             <input
                               className="form-check-input"
                               type="checkbox"
-                              value=""
-                              id={item.assetName}
-                              checked={selectedAssets.includes(item.assetName)}
-                              onChange={() =>
-                                handleCheckboxChange(item.assetName)
-                              }
+                              // value=""
+                              // id={item.assetName}
+                              // checked={selectedAssets.includes(item.assetName)}
+                              // onChange={() =>
+                              //   handleCheckboxChange(item.assetName)
+                              // }
+                              value={item.id}
+                            id={item.name}
+                            checked={formState.checklistIds.includes(item.id)}
+                            onChange={handleCheckboxChange}
                             />
                             <label
                               className="form-check-label"

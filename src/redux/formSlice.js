@@ -1,4 +1,4 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   asset: "",
@@ -7,6 +7,7 @@ const initialState = {
   assetCategory: "",
   assetCategoryId: null,
   selectedAssets: [],
+  assetListIds: [],
   ticketTitle: "",
   ticketDescription: "",
   assignedTeam: {},
@@ -23,7 +24,7 @@ const initialState = {
 };
 
 const formSlice = createSlice({
-  name: 'form',
+  name: "form",
   initialState,
   reducers: {
     setLocation: (state, action) => {
@@ -35,11 +36,20 @@ const formSlice = createSlice({
       state.assetCategoryId = action.payload.assetCategoryId;
     },
     setCategory: (state, action) => {
-        state.categoryOfWork = action.payload.categoryOfWork;
-        state.categoryOfWorkId = action.payload.categoryOfWorkId;
-      },
+      state.categoryOfWork = action.payload.categoryOfWork;
+      state.categoryOfWorkId = action.payload.categoryOfWorkId;
+    },
     setSelectedAssets: (state, action) => {
       state.selectedAssets = action.payload;
+    },
+    addSelectedAssets: (state, action) => {
+      state.selectedAssets.push(action.payload);
+    },
+    setAssetListId: (state, action) => {
+      state.assetListIds = action.payload;
+    },
+    addAssetListId: (state, action) => {
+      state.assetListIds.push(action.payload);
     },
     setTicketTitle: (state, action) => {
       state.ticketTitle = action.payload;
@@ -76,7 +86,9 @@ const formSlice = createSlice({
       state.files.push(action.payload);
     },
     deleteFile: (state, action) => {
-      state.files = state.files.filter(file => file.fileName !== action.payload);
+      state.files = state.files.filter(
+        (file) => file.fileName !== action.payload
+      );
     },
     addProjectedPart: (state, action) => {
       state.projectedParts.push(action.payload);
@@ -85,7 +97,9 @@ const formSlice = createSlice({
       state.checklistIds.push(action.payload);
     },
     removeChecklistId: (state, action) => {
-      state.checklistIds = state.checklistIds.filter(id => id !== action.payload);
+      state.checklistIds = state.checklistIds.filter(
+        (id) => id !== action.payload
+      );
     },
     resetForm: () => initialState,
   },
@@ -112,6 +126,9 @@ export const {
   resetForm,
   addChecklistId,
   removeChecklistId,
+  setAssetListId,
+  addAssetListId,
+  addSelectedAssets,
 } = formSlice.actions;
 
 export default formSlice.reducer;
