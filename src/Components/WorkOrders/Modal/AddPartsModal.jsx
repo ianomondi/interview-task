@@ -127,6 +127,7 @@ const AddPartsModal = (props) => {
               <input
                 className="modal-input-box"
                 type="number"
+                min="0"
                 style={{
                   background: "#F1EFEF",
                   width: "100%",

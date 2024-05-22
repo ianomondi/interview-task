@@ -2,12 +2,27 @@ import React, { useState } from "react";
 import { Modal } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import store from "../../../context";
-import { useRecoilState } from "recoil";
+import { useRecoilState, useRecoilValue } from "recoil";
 
 const WorkOrderSummary = () => {
-  const [workOrderAssets, setWorkOrderAssets] = useRecoilState(
-    store.workOrderAssets
+  const [workOrderSummary, setWorkOrderSummary] = useRecoilState(
+    store.workOrderSummary
   );
+
+  const assets = useRecoilValue(store.selectedAssets);
+  const location = useRecoilValue(store.selectedLocation);
+  const assetCategory = useRecoilValue(store.selectedAssetCategory);
+  const categoryOfWork = useRecoilValue(store.selectedWork);
+  const selectedTeam = useRecoilValue(store.selectedTeam);
+  const selectedAssignWorker = useRecoilValue(store.selectedAssignWorker);
+  const selectedPriority = useRecoilValue(store.selectedPriority);
+  const estimateHours = useRecoilValue(store.estimateHours);
+  const isSigned = useRecoilValue(store.isSigned);
+  const projectParts = useRecoilValue(store.projectParts);
+  const selectedCheckList = useRecoilValue(store.selectedCheckList);
+  const workOrderTitle = useRecoilValue(store.workOrderTitle);
+  const workOrderDescription = useRecoilValue(store.workOrderDescription);
+
   const [imageShow, setImageShow] = useState(false);
   const [videoShow, setVideoShow] = useState(false);
   const [documentShow, setDocumentShow] = useState(false);
@@ -16,7 +31,7 @@ const WorkOrderSummary = () => {
     setVideoShow(false);
     setDocumentShow(false);
   };
-  console.log("I am work order summary", workOrderAssets);
+
   return (
     <>
       <div className="order-details-content pb-lg-4">
@@ -37,7 +52,7 @@ const WorkOrderSummary = () => {
               >
                 Location
               </div>
-              <div className="fs-14 fw-medium">Gigiri</div>
+              <div className="fs-14 fw-medium">{location}</div>
             </div>
             <div className="col-md-3">
               <div
@@ -46,7 +61,7 @@ const WorkOrderSummary = () => {
               >
                 Asset Category
               </div>
-              <div className="fs-14 fw-medium">Pumps</div>
+              <div className="fs-14 fw-medium">{assetCategory}</div>
             </div>
             <div className="col-md-3">
               <div
@@ -55,7 +70,7 @@ const WorkOrderSummary = () => {
               >
                 Assets
               </div>
-              <div className="fs-14 fw-medium">Pump1, Pump 2</div>
+              <div className="fs-14 fw-medium">{`${[...assets]}`}</div>
             </div>
           </div>
           <hr />
@@ -73,7 +88,7 @@ const WorkOrderSummary = () => {
               >
                 Work Order Title:
               </div>
-              <div className="fs-14 fw-medium">Pump Maintenance</div>
+              <div className="fs-14 fw-medium">{workOrderTitle}</div>
             </div>
             <div className="col-md-3">
               <div
@@ -82,7 +97,7 @@ const WorkOrderSummary = () => {
               >
                 Category of Work:
               </div>
-              <div className="fs-14 fw-medium">Engineering</div>
+              <div className="fs-14 fw-medium">{categoryOfWork}</div>
             </div>
             <div className="col-md-3">
               <div
@@ -91,7 +106,7 @@ const WorkOrderSummary = () => {
               >
                 Team:
               </div>
-              <div className="fs-14 fw-medium">AZ Engineers</div>
+              <div className="fs-14 fw-medium">{selectedTeam}</div>
             </div>
             <div className="col-md-3">
               <div
@@ -100,7 +115,7 @@ const WorkOrderSummary = () => {
               >
                 Worker:
               </div>
-              <div className="fs-14 fw-medium">Not Assigned</div>
+              <div className="fs-14 fw-medium">{selectedAssignWorker}</div>
             </div>
             <div className="col-md-6">
               <div
@@ -110,9 +125,7 @@ const WorkOrderSummary = () => {
                 Description:
               </div>
               <div className="fs-14 fw-medium" style={{ lineHeight: "1.3" }}>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-                eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-                enim ad minim veniam, quis nostrud exercitation
+                {workOrderDescription}
               </div>
             </div>
             <div className="col-md-3">
@@ -123,7 +136,7 @@ const WorkOrderSummary = () => {
                 Priority:
               </div>
               <div className="fs-14 fw-bold" style={{ color: "#D57D2A" }}>
-                HIGH
+                {selectedPriority}
               </div>
             </div>
           </div>
@@ -142,7 +155,7 @@ const WorkOrderSummary = () => {
               >
                 Technician Signature Required?
               </div>
-              <div className="fs-14 fw-medium">Yes</div>
+              <div className="fs-14 fw-medium">{isSigned ? "Yes" : "No"}</div>
             </div>
             <div className="col-md-3">
               <div
@@ -151,7 +164,9 @@ const WorkOrderSummary = () => {
               >
                 Estimated Hours
               </div>
-              <div className="fs-14 fw-medium">20 Hours</div>
+              <div className="fs-14 fw-medium">
+                {estimateHours ? `${estimateHours} Hours` : "Unspecified"}
+              </div>
             </div>
           </div>
           <hr />
@@ -163,8 +178,12 @@ const WorkOrderSummary = () => {
           </div>
           <div className="row">
             <div className="col-md-3 d-grid gap-2">
-              <div className="fs-14 fw-medium">Part A - 100005, 3 Pieces</div>
-              <div className="fs-14 fw-medium">Part A - 100005, 3 Pieces</div>
+              {projectParts.length > 0 &&
+                projectParts.map((item, index) => (
+                  <div key={index} className="fs-14 fw-medium">
+                    {`${item.part} - ${item.quantity} Pieces`}
+                  </div>
+                ))}
             </div>
           </div>
           <hr />
@@ -176,8 +195,12 @@ const WorkOrderSummary = () => {
           </div>
           <div className="row">
             <div className="col-md-3 d-grid gap-2">
-              <div className="fs-14 fw-medium">Pump Nozzle Checklist</div>
-              <div className="fs-14 fw-medium">Pump Monitor Checklist</div>
+              {selectedCheckList.length > 0 &&
+                selectedCheckList.map((item, index) => (
+                  <div key={index} className="fs-14 fw-medium">
+                    {item}
+                  </div>
+                ))}
             </div>
           </div>
           <hr />

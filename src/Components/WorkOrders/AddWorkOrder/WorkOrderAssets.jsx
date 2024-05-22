@@ -14,20 +14,25 @@ const WorkOrderAssets = () => {
     assetCategory: "Select",
     assignAdditionalTeam: "Select",
   });
-  const [workOrderAssets, setWorkOrderAssets] = useRecoilState(
-    store.workOrderAssets
-  );
   const [locatonAndAssetCategoryIds, setlocatonAndAssetCategoryIds] =
     useRecoilState(store.locatonAndAssetCategoryIds);
 
-  const [selectedAssets, setSelectedAssets] = useState([]);
-  const [selectedLocation, setSelectedLocation] = useState("Select");
-  const [selectedAssetCategory, setSelectedAssetCategory] = useState("Select");
+  const [selectedAssets, setSelectedAssets] = useRecoilState(
+    store.selectedAssets
+  );
+  const [selectedLocation, setSelectedLocation] = useRecoilState(
+    store.selectedLocation
+  );
+  const [selectedAssetCategory, setSelectedAssetCategory] = useRecoilState(
+    store.selectedAssetCategory
+  );
 
   // Form Data
-  const [locationData, setLocationData] = useState([]);
-  const [assetData, setAssetData] = useState([]);
-  const [assetCheckData, setAssetCheckData] = useState([]);
+  const [locationData, setLocationData] = useRecoilState(store.locationData);
+  const [assetData, setAssetData] = useRecoilState(store.assetData);
+  const [assetCheckData, setAssetCheckData] = useRecoilState(
+    store.assetCheckData
+  );
   //location search input
   const [locationSearch, setLocationSearch] = useState("");
   //asset category search input

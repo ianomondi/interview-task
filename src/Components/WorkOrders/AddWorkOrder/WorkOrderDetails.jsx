@@ -11,20 +11,36 @@ import store from "../../../context";
 import { useRecoilState, useRecoilValue } from "recoil";
 
 const WorkOrderDetails = () => {
-  const [addPartShow, setAddPartShow] = useState(false);
-  const [selectedWork, setselectedWork] = useState("Select");
-  const [selectedTeam, setselectedTeam] = useState("Select");
-  const [selectedAssignWorker, setselectedAssignWorker] = useState("Select");
-  const [selectedPart, setSelectedPart] = useState([]);
-  const [workData, setworkData] = useState([]);
-  const [priorityData, setPriorityData] = useState([]);
-  const [teamData, setTeamData] = useState([]);
-  const [assignWorkerData, setAssignWorkerData] = useState([]);
-  const [checklistItemsData, setChecklistItemsData] = useState([]);
-  const [selectedCheckList, setSelectedCheckList] = useState([]);
-  const [isChecked, setIsChecked] = useState(false);
-  const [estimateHours, setEstimateHours] = useState(null);
-  const [isSigned, setIsSigned] = useState(false);
+  const [addPartShow, setAddPartShow] = useRecoilState(store.addPartShow);
+  const [selectedWork, setselectedWork] = useRecoilState(store.selectedWork);
+  const [selectedTeam, setselectedTeam] = useRecoilState(store.selectedTeam);
+  const [selectedAssignWorker, setselectedAssignWorker] = useRecoilState(
+    store.selectedAssignWorker
+  );
+  const [selectedPart, setSelectedPart] = useRecoilState(store.selectedPart);
+  const [workData, setworkData] = useRecoilState(store.workData);
+  const [priorityData, setPriorityData] = useRecoilState(store.priorityData);
+  const [teamData, setTeamData] = useRecoilState(store.teamData);
+  const [workOrderTitle, setWorkOrderTitle] = useRecoilState(
+    store.workOrderTitle
+  );
+  const [workOrderDescription, setWorkOrderDescription] = useRecoilState(
+    store.workOrderDescription
+  );
+  const [assignWorkerData, setAssignWorkerData] = useRecoilState(
+    store.assignWorkerData
+  );
+  const [checklistItemsData, setChecklistItemsData] = useRecoilState(
+    store.checklistItemsData
+  );
+  const [selectedCheckList, setSelectedCheckList] = useRecoilState(
+    store.selectedCheckList
+  );
+  const [estimateHours, setEstimateHours] = useRecoilState(store.estimateHours);
+  const [isSigned, setIsSigned] = useRecoilState(store.isSigned);
+  const [selectedPriority, setSelectedPriority] = useRecoilState(
+    store.selectedPriority
+  );
   //part search input
   const [partSearch, setPartSearch] = useState("");
 
@@ -34,8 +50,6 @@ const WorkOrderDetails = () => {
   const handleShow = () => setShow(true);
   //checklist search
   const [search, setSearch] = useState("");
-
-  const [selectedPriority, setSelectedPriority] = useState(null);
 
   const handlePriorityClick = (priority) => {
     setSelectedPriority(priority);
@@ -123,7 +137,6 @@ const WorkOrderDetails = () => {
     updateWorkerList(selectedTeam);
   }, [selectedTeam]);
 
-  console.log(isSigned);
   //category of work search input
   const [workSearch, setWorkSearch] = useState("");
   //asign team search input
@@ -178,9 +191,6 @@ const WorkOrderDetails = () => {
     setSelectedCheckList([...selectedCheckList, eventKey]);
   };
 
-  // console.log("selectedPart", projectParts);
-  // console.log(checklistItemsData);
-  // console.log(checklistItemsData);
   return (
     <>
       <div className="order-details-content pb-lg-4">
@@ -189,11 +199,19 @@ const WorkOrderDetails = () => {
         <div className="row details-forms-one pt-5">
           <div className="col-md-6">
             <label>Work Order Title</label>
-            <input type="text" />
+            <input
+              type="text"
+              value={workOrderTitle}
+              onChange={(e) => setWorkOrderTitle(e.target.value)}
+            />
           </div>
           <div className="col-md-6">
             <label>Description</label>
-            <textarea name="Description"></textarea>
+            <textarea
+              name="Description"
+              value={workOrderDescription}
+              onChange={(e) => setWorkOrderDescription(e.target.value)}
+            ></textarea>
           </div>
           <div className="col-md-6">
             <label>Category of Work</label>
@@ -343,6 +361,7 @@ const WorkOrderDetails = () => {
             <label>Estimate Hours</label>
             <input
               type="number"
+              min="0"
               className="input-box"
               onChange={(e) => setEstimateHours(e.target.value)}
             />
@@ -584,10 +603,7 @@ const WorkOrderDetails = () => {
                       <input
                         className="form-check-input"
                         type="checkbox"
-                        value=""
                         id={item}
-                        checked={isChecked}
-                        onChange={() => setIsChecked(!isChecked)}
                       />
                       <label className="form-check-label" for={item}>
                         {item}
@@ -618,38 +634,5 @@ const WorkOrderDetails = () => {
     </>
   );
 };
-
-const checkList = [
-  {
-    id: 1,
-    name: "Pump Nozzle Checklist",
-    isCompleted: false,
-  },
-  {
-    id: 2,
-    name: "Pump Monitor Checklist",
-    isCompleted: false,
-  },
-  {
-    id: 3,
-    name: "Pump Monitor 1",
-    isCompleted: false,
-  },
-  {
-    id: 4,
-    name: "Pump Monitor 10",
-    isCompleted: false,
-  },
-  {
-    id: 5,
-    name: "Pump Monitor 11",
-    isCompleted: false,
-  },
-  {
-    id: 6,
-    name: "Pump Monitor 12",
-    isCompleted: false,
-  },
-];
 
 export default WorkOrderDetails;
