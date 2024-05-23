@@ -16,7 +16,7 @@ const WorkOrders = () => {
             <div className="other-nav">
               <ul>
                 <li>
-                  <Link to="/">Home</Link>
+                  <Link to="/">Homes</Link>
                 </li>
                 <li>
                   <Link to="">Work Orders</Link>
@@ -56,7 +56,7 @@ const workOrders = [
   {
     ref: "CM1000001",
     asset: "A Mavoko Pump 1 - 1005",
-    location: "Mavoko Station",
+    location: "Mavoko Stations",
     title: "Pump overdispensing",
     order: "CM10005",
     priority: "Medium",

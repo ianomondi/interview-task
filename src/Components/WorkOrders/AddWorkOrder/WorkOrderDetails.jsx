@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import DownIcon from "../../../Assets/Icons/DownIcon";
 import SearchIcon from "../../../Assets/Icons/SearchIcon";
 import AddPartsModal from "../Modal/AddPartsModal";
@@ -6,11 +6,16 @@ import { Link } from "react-router-dom";
 import EditIcon2 from "../../../Assets/Icons/EditIcon2";
 import DelateIcon2 from "../../../Assets/Icons/DelateIcon2";
 import { Dropdown, Modal } from "react-bootstrap";
+import { WorkOrderFormContext } from "../../../Providers/WorkOrderFormProvider";
+import { get } from "../../../Pages/Services/ApiHelper";
 
 const WorkOrderDetails = () => {
+  // Form Context (keeps track of formv values)
+  const {formData, setFormData } = useContext(WorkOrderFormContext)
+
   const [addPartShow, setAddPartShow] = useState(false);
-  const [selectedWork, setselectedWork] = useState("Select");
-  const [selectedTeam, setselectedTeam] = useState("Select");
+  const [selectedWork, setselectedWork] = useState(formData.workCategory.name === '' ? 'Select': formData.workCategory.name);
+  const [selectedTeam, setselectedTeam] = useState(formData.assignedTeam.name === '' ? "Select": formData.assignedTeam.name);
   const [selectedAssignWorker, setselectedAssignWorker] = useState("Select");
   const [selectedPart, setselectedPart] = useState("Part B - 200008");
   //part search input
@@ -26,17 +31,33 @@ const WorkOrderDetails = () => {
   //checklist search
   const [search, setSearch] = useState("");
 
-  const [selectedPriority, setSelectedPriority] = useState(null);
+  const [selectedPriority, setSelectedPriority] = useState(formData.ticketPriority.id === 0 ? null : formData.ticketPriority.name);
 
   const handlePriorityClick = (priority) => {
-    setSelectedPriority(priority);
+    setSelectedPriority(priority.ticketPrioritiesName);
+    setFormData({
+      ...formData,
+      ticketPriority: {
+        id: priority.id,
+        name: priority.ticketPrioritiesName
+      }
+    })
   };
+
+  // dynamic data for form 
+  const [workData, setWorkData] = useState([])
+  const [ticketPriorityData, setTicketPriorityData] = useState([])
+  const [teamData, setTeamData] = useState([])
+  const [assignWorkerData, setWorkerData] = useState([])
+  const [checkList, setCheckList] = useState([])
+  const [parts, setParts] = useState([])
+
 
   const [selectValue, setSelectValue] = useState({
     asset: "Select",
-    category: "Select",
-    assignTeam: "Select",
-    assignAdditionalTeam: "Select",
+    category: formData.workCategory.name === '' ? 'Select': formData.workCategory.name,
+    assignTeam: formData.assignedTeam.name === '' ? "Select": formData.assignedTeam.name,
+    assignAdditionalTeam: formData.assignedUser.name === '' ? "Select": formData.assignedUser.name,
   });
 
   //filter checklist by search
@@ -49,28 +70,65 @@ const WorkOrderDetails = () => {
     setSelectValue({ ...selectValue, part: eventKey });
   };
 
-  //Dummy data
-  const workData = [
-    { name: "Category " },
-    { name: "Work" },
-    { name: "Type" },
-    { name: "Priority" },
-    { name: "Status" },
-  ];
-  const teamData = [
-    { name: "Assign " },
-    { name: "Team" },
-    { name: "Primary" },
-    { name: "Secondary" },
-    { name: "Tertiary" },
-  ];
-  const assignWorkerData = [
-    { name: "Assign " },
-    { name: "Worker " },
-    { name: "Primary" },
-    { name: "Secondary" },
-    { name: "Tertiary" },
-  ];
+  useEffect(() => {
+    const token = localStorage.getItem('bearerToken')
+    if (!token){
+      return
+    }
+    get('https://saharadeskbackend.azurewebsites.net/api/CategoryOfWorks', token)
+    .then(data => {
+      setWorkData(data)
+    })
+
+
+    get('https://saharadeskbackend.azurewebsites.net/api/Tickets/GetAllTicketPriorities', token)
+    .then(data => {
+      setTicketPriorityData(data)
+    })
+
+    get('https://saharadeskbackend.azurewebsites.net/api/Checklists/GetChecklists?PageNumber=1&PageSize=100', token)
+    .then(data => {
+      setCheckList(data.data)
+    })
+
+    get('https://saharadeskbackend.azurewebsites.net/api/Parts/GetAllParts', token)
+    .then(data => {
+      console.log(data)
+      setParts(data)
+    })
+  }, [])
+
+  useEffect(() => {
+    const token = localStorage.getItem('bearerToken')
+    if (!token){
+      return
+    }
+
+    if (formData.location.locationId === null || formData.workCategory.id === null){
+      return
+    }
+
+    get(`https://saharadeskbackend.azurewebsites.net/api/Team/GetTeamsToAssignTicket?locationId=${formData.location.locationId}&categoryofworkId=${formData.workCategory.id}`, token)
+    .then(data => {
+      setTeamData(data)
+    })
+
+  }, [formData.location.locationId, formData.workCategory.id])
+
+  useEffect(() => {
+    const token = localStorage.getItem('bearerToken')
+    if (!token){
+      return
+    }
+
+    if (formData.assignedTeam.id === null) {
+      return
+    }
+    get(`https://saharadeskbackend.azurewebsites.net/api/Team/GetAllUsersByTeam/${formData.assignedTeam.id}`, token)
+    .then(data => {
+      setWorkerData(data)
+    })
+  }, [formData.assignedTeam.id])
 
   //category of work search input
   const [workSearch, setWorkSearch] = useState("");
@@ -81,15 +139,15 @@ const WorkOrderDetails = () => {
 
   //filter category of work data
   const filteredWorkData = workData.filter((item) => {
-    return item.name.toLowerCase().includes(workSearch.toLowerCase());
+    return item.categoryOfWorkName.toLowerCase().includes(workSearch.toLowerCase());
   });
   //filter assign team data
   const filteredTeamData = teamData.filter((item) => {
-    return item.name.toLowerCase().includes(teamSearch.toLowerCase());
+    return item.teamName.toLowerCase().includes(teamSearch.toLowerCase());
   });
   //filter assign worker data
   const filteredAssignWorkerData = assignWorkerData.filter((item) => {
-    return item.name.toLowerCase().includes(assignWorkerSearch.toLowerCase());
+    return item.user.userName.toLowerCase().includes(assignWorkerSearch.toLowerCase());
   });
   //filter project parts data
   const filteredProjectParts = projectParts.filter((item) => {
@@ -97,20 +155,118 @@ const WorkOrderDetails = () => {
   });
 
   const handleWorkSelect = (eventKey) => {
-    setselectedWork(eventKey);
-    setSelectValue({ ...selectValue, category: eventKey });
+    const values = eventKey.split('$')
+
+    setselectedWork(values[1]);
+    setSelectValue({ ...selectValue, category: values[1] });
     setWorkSearch("");
+    setFormData({
+      ...formData,
+      workCategory: {
+        id: Number(values[0]),
+        name: values[1]
+      }
+    })
   };
+  console.log(formData)
   const handleTeamSelect = (eventKey) => {
-    setselectedTeam(eventKey);
-    setSelectValue({ ...selectValue, assignTeam: eventKey });
+    const values = eventKey.split('$')
+    console.log(values)
+    setselectedTeam(values[1]);
+    setSelectValue({ ...selectValue, assignTeam: values[1] });
     setTeamSearch("");
+    setFormData((prev) => ({
+      ...prev,
+      assignedTeam: {
+        id: Number(values[0]),
+        name: values[1]
+      }
+    }))
   };
   const handleAssignWorkerSelect = (eventKey) => {
-    setselectedAssignWorker(eventKey);
-    setSelectValue({ ...selectValue, assignAdditionalTeam: eventKey });
+    const values = eventKey.split('$')
+    setselectedAssignWorker(values[1]);
+    setSelectValue({ ...selectValue, assignAdditionalTeam: values[1] });
     setAssignWorkerSearch("");
+    setFormData((prev) => ({
+      ...prev,
+      assignedUser: {
+        id: Number(values[0]),
+        name: values[1]
+      }
+    }))
   };
+
+  function handleWorkOrderTitleChange(event) {
+    const { value } = event.target
+    setFormData((prev) => ({
+      ...prev,
+      ticketTitle: value
+    }))
+  }
+
+  function handleDescriptionChange(event){
+    const { value } = event.target 
+    setFormData((prev) => ({
+      ...prev, 
+      ticketDescription: value
+    }))
+  }
+
+  function handleTechnicianSignature(event){
+    setFormData((prev) => ({
+      ...prev,
+      signatureRequiredToCompleteWork : !formData.signatureRequiredToCompleteWork
+    }))
+  }
+
+  function handleEstimatedHours(event){
+    const {value} = event.target
+    setFormData((prev) => ({
+      ...prev, 
+      estimatedHours: value
+    }))
+  }
+
+  function handleCheckListChange(value){
+    setFormData((prev) => {
+      console.log('THe id and name', value)
+      const assertExists = prev.checklist.some(
+        (asset) => asset.id === value.id
+      )
+
+      let updatedCheckList;
+      if (assertExists){
+        updatedCheckList = prev.checklist.filter(
+          (asset) => asset.id !== value.id
+        );
+      } else {
+        updatedCheckList = [
+          ...prev.checklist,
+          { id: value.id, name: value.name}
+        ]
+      }
+      
+      return {
+        ...prev,
+        checklist: updatedCheckList
+      }
+    })
+  }
+
+  function handleRemoveChecklistItem(value) {
+    console.log(value)
+    setFormData((prev) => {
+      const updatedCheckList = prev.checklist.filter(
+        (asset) => asset.id !== value.id
+      )
+
+      return {
+        ...prev,
+        checklist: updatedCheckList
+      }
+    })
+  }
 
   return (
     <>
@@ -120,11 +276,11 @@ const WorkOrderDetails = () => {
         <div className="row details-forms-one pt-5">
           <div className="col-md-6">
             <label>Work Order Title</label>
-            <input type="text" />
+            <input type="text" onChange={handleWorkOrderTitleChange} value={formData.ticketTitle}/>
           </div>
           <div className="col-md-6">
             <label>Description</label>
-            <textarea name="Description"></textarea>
+            <textarea name="Description" onChange={handleDescriptionChange} value={formData.ticketDescription}></textarea>
           </div>
           <div className="col-md-6">
             <label>Category of Work</label>
@@ -142,7 +298,7 @@ const WorkOrderDetails = () => {
                     <SearchIcon />
                   </button>
                   <input
-                    value={workSearch}
+                    value={formData.workCategory.name}
                     onChange={(e) => setWorkSearch(e.target.value)}
                     type="text"
                     placeholder="Search"
@@ -150,8 +306,8 @@ const WorkOrderDetails = () => {
                 </form>
                 <div className="dropdown-item-content">
                   {filteredWorkData.map((item, index) => (
-                    <Dropdown.Item key={index} eventKey={item.name}>
-                      {item.name}
+                    <Dropdown.Item key={index} eventKey={item.id + '$' + item.categoryOfWorkName}>
+                      {item.categoryOfWorkName}
                     </Dropdown.Item>
                   ))}
                 </div>
@@ -161,38 +317,18 @@ const WorkOrderDetails = () => {
           <div className="col-md-6">
             <label>Priority</label>
             <ul className="priority-list">
-              <li>
-                <button
-                  className={selectedPriority === "Low" ? "active" : ""}
-                  onClick={() => handlePriorityClick("Low")}
-                >
-                  Low
-                </button>
-              </li>
-              <li>
-                <button
-                  className={selectedPriority === "Medium" ? "active" : ""}
-                  onClick={() => handlePriorityClick("Medium")}
-                >
-                  Medium
-                </button>
-              </li>
-              <li>
-                <button
-                  className={selectedPriority === "High" ? "active" : ""}
-                  onClick={() => handlePriorityClick("High")}
-                >
-                  High
-                </button>
-              </li>
-              <li>
-                <button
-                  className={selectedPriority === "Critical" ? "active" : ""}
-                  onClick={() => handlePriorityClick("Critical")}
-                >
-                  Critical
-                </button>
-              </li>
+              {ticketPriorityData.length > 0 && (
+                ticketPriorityData.map(data => (
+                  <li>
+                    <button
+                      className={selectedPriority === data.ticketPrioritiesName ? "active" : ""}
+                      onClick={() => handlePriorityClick(data)}
+                    >
+                      {data.ticketPrioritiesName}
+                    </button>
+                  </li>
+                ))
+              )}
             </ul>
           </div>
           <div className="col-md-6">
@@ -214,13 +350,13 @@ const WorkOrderDetails = () => {
                     onChange={(e) => setTeamSearch(e.target.value)}
                     type="text"
                     placeholder="Search"
-                    value={teamSearch}
+                    value={formData.assignedTeam.name}
                   />
                 </form>
                 <div className="dropdown-item-content">
                   {filteredTeamData.map((item, index) => (
-                    <Dropdown.Item key={index} eventKey={item.name}>
-                      {item.name}
+                    <Dropdown.Item key={index} eventKey={item.id + '$' + item.teamName}>
+                      {item.teamName}
                     </Dropdown.Item>
                   ))}
                 </div>
@@ -247,7 +383,7 @@ const WorkOrderDetails = () => {
                       <SearchIcon />
                     </button>
                     <input
-                      value={assignWorkerSearch}
+                      value={formData.assignedUser.name}
                       onChange={(e) => setAssignWorkerSearch(e.target.value)}
                       type="text"
                       placeholder="Search"
@@ -255,8 +391,8 @@ const WorkOrderDetails = () => {
                   </form>
                   <div className="dropdown-item-content">
                     {filteredAssignWorkerData.map((item, index) => (
-                      <Dropdown.Item key={index} eventKey={item.name}>
-                        {item.name}
+                      <Dropdown.Item key={index} eventKey={item.user.id + '$' + item.user.userName}>
+                        {item.user.userName}
                       </Dropdown.Item>
                     ))}
                   </div>
@@ -273,8 +409,9 @@ const WorkOrderDetails = () => {
               <input
                 className="form-check-input"
                 type="checkbox"
-                value=""
                 id="required"
+                checked={formData.signatureRequiredToCompleteWork}
+                onChange={handleTechnicianSignature}
               />
               <label className="form-check-label" for="required">
                 Technician signature required
@@ -283,7 +420,7 @@ const WorkOrderDetails = () => {
           </div>
           <div className="col-md-6">
             <label>Estimate Hours</label>
-            <input type="text" className="input-box" />
+            <input type="number" className="input-box" onChange={handleEstimatedHours}/>
           </div>
         </div>
         <hr />
@@ -501,6 +638,7 @@ const WorkOrderDetails = () => {
                           type="checkbox"
                           value=""
                           id={check.name}
+                          onChange={e => handleCheckListChange(check)}
                         />
                         <label className="form-check-label" for={check.name}>
                           {check.name}
@@ -514,38 +652,29 @@ const WorkOrderDetails = () => {
             <div className="checklists-box">
               <div className="fs-15 checklists-title">Checklists</div>
               <ul className="checklists-list">
-                <li>
-                  <div className="form-check">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      value=""
-                      id="Nozzle"
-                    />
-                    <label className="form-check-label" for="Nozzle">
-                      Pump Nozzle Checklist
-                    </label>
-                  </div>
-                  <button>
-                    <DelateIcon2 />
-                  </button>
-                </li>
-                <li>
-                  <div className="form-check">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      value=""
-                      id="Monitor"
-                    />
-                    <label className="form-check-label" for="Monitor">
-                      Pump Monitor Checklist
-                    </label>
-                  </div>
-                  <button>
-                    <DelateIcon2 />
-                  </button>
-                </li>
+                {formData.checklist.length > 0 && (
+                  formData.checklist.map(v => (
+                  <li>
+                    <div className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        value=""
+                        checked
+                        id={v.name}
+                      />
+                      <label className="form-check-label" for="Nozzle">
+                        {v.name}
+                      </label>
+                    </div>
+                    <button onClick={e => handleRemoveChecklistItem(v)}>
+                      <DelateIcon2 />
+                    </button>
+                  </li>
+                  ))
+                )}
+                
+                
               </ul>
             </div>
           </div>
@@ -562,42 +691,10 @@ const WorkOrderDetails = () => {
           </Link>
         </div>
       </div>
-      <AddPartsModal show={addPartShow} onHide={() => setAddPartShow(false)} />
+      <AddPartsModal show={addPartShow} onHide={() => setAddPartShow(false)} partData={parts}/>
     </>
   );
 };
 
-const checkList = [
-  {
-    id: 1,
-    name: "Pump Nozzle Checklist",
-    isCompleted: false,
-  },
-  {
-    id: 2,
-    name: "Pump Monitor Checklist",
-    isCompleted: false,
-  },
-  {
-    id: 3,
-    name: "Pump Monitor 1",
-    isCompleted: false,
-  },
-  {
-    id: 4,
-    name: "Pump Monitor 10",
-    isCompleted: false,
-  },
-  {
-    id: 5,
-    name: "Pump Monitor 11",
-    isCompleted: false,
-  },
-  {
-    id: 6,
-    name: "Pump Monitor 12",
-    isCompleted: false,
-  },
-];
 
 export default WorkOrderDetails;

@@ -1,8 +1,8 @@
 import { debounce } from "lodash";
 
 //Define Service Base URL
-export const BASE_URL = "https://saharadeskbackendpm.azurewebsites.net/api/";
-export const BASE_URL1 = "https://saharadeskbackendpm.azurewebsites.net/api/";
+export const BASE_URL = "https://interview-test.azurewebsites.net/api/";
+export const BASE_URL1 = "https://interview-test.azurewebsites.net/api/";
 
 // 'https://localhost:7160/api/Checklists/GetRoutineInspectionScheduleCategories?PageSize=10&PageNumber=1&Search=compressors&AssetCategory=5
 

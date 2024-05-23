@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { Dropdown } from "react-bootstrap";
 import Modal from "react-bootstrap/Modal";
 import { Link } from "react-router-dom";
 import SearchIcon from "../../../Assets/Icons/SearchIcon";
+import { WorkOrderFormContext } from "../../../Providers/WorkOrderFormProvider";
 
 const AddPartsModal = (props) => {
   const [selectedPart, setselectedPart] = useState("Select Part");
@@ -10,14 +11,11 @@ const AddPartsModal = (props) => {
     "Select location of part"
   );
 
+  const {formData, setFormData } = useContext(WorkOrderFormContext)
   //Dummy part and location data
-  const partData = [
-    { name: "Select  " },
-    { name: "Part" },
-    { name: "Part 2" },
-    { name: "Part 3" },
-    { name: "Part 4" },
-  ];
+
+  console.log(props.partData)
+  
   const partLocationData = [
     { name: "Select  " },
     { name: "location  " },
@@ -33,8 +31,8 @@ const AddPartsModal = (props) => {
   const [partSearch, setPartSearch] = useState("");
 
   //filter part and location data
-  const filteredPartData = partData.filter((item) => {
-    return item.name.toLowerCase().includes(partSearch.toLowerCase());
+  const filteredPartData = props.partData.filter((item) => {
+    return item.partName.toLowerCase().includes(partSearch.toLowerCase());
   });
   const filteredPartLocationData = partLocationData.filter((item) => {
     return item.name.toLowerCase().includes(partLocationSearch.toLowerCase());
@@ -90,8 +88,8 @@ const AddPartsModal = (props) => {
                   </form>
                   <div className="dropdown-item-content">
                     {filteredPartData.map((item, index) => (
-                      <Dropdown.Item key={index} eventKey={item.name}>
-                        {item.name}
+                      <Dropdown.Item key={index} eventKey={item.id + '$' + item.partName}>
+                        {item.partName}
                       </Dropdown.Item>
                     ))}
                   </div>

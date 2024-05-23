@@ -1,14 +1,17 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import AttachIcon from "../../../Assets/Icons/AttachIcon";
 import { Link } from "react-router-dom";
 import { Modal } from "react-bootstrap";
 import DeleteIcon from "../../../Assets/Icons/DeleteIcon";
+import { WorkOrderFormContext } from "../../../Providers/WorkOrderFormProvider";
 
 const WorkOrderInformation = () => {
   const [attachments, setAttachments] = useState([]);
   const [attachShow, setAttachShow] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedFileType, setSelectedFileType] = useState(null);
+
+  const {formData, setFormData} = useContext(WorkOrderFormContext)
 
   const handleClose = () => {
     setAttachShow(false);
@@ -18,19 +21,48 @@ const WorkOrderInformation = () => {
 
   const handleFileChange = (e) => {
     const selectedFiles = Array.from(e.target.files);
-    const newFiles = selectedFiles.filter(
-      (file) => !attachments.includes(file.name)
-    );
-    setAttachments((prevAttachments) => [
-      ...prevAttachments,
-      ...newFiles.map((file) => file.name),
-    ]);
+  
+    selectedFiles.forEach((file) => {
+      const reader = new FileReader();
+      
+      reader.onload = (event) => {
+        const base64EncodedFile = event.target.result.split(',')[1];
+        const fileName = file.name;
+        const fileType = fileName.split('.').pop();
+
+        const newFile = {
+          encodedFile: base64EncodedFile,
+          fileName: fileName,
+          url: '',
+          fileType: fileType,
+        };
+
+        setFormData((prev) => ({
+          ...prev,
+          files: [
+            newFile
+          ]
+        }))
+      };
+      
+      reader.readAsDataURL(file);
+    });
+
+    // // const selectedFiles = Array.from(e.target.files);
+    // const newFiles = selectedFiles.filter(
+    //   (file) => !attachments.includes(file.name)
+    // );
+    // setAttachments((prevAttachments) => [
+    //   ...prevAttachments,
+    //   ...newFiles.map((file) => file.name),
+    // ]);
   };
 
   const deleteFile = (attachment) => {
-    setAttachments((prevAttachments) =>
-      prevAttachments.filter((file) => file !== attachment)
-    );
+    setFormData((prev) => ({
+      ...prev,
+      files: []
+    }))
   };
 
   const handleFileClick = (file) => {
@@ -78,7 +110,7 @@ const WorkOrderInformation = () => {
               style={{ display: "none" }}
             />
           </label>
-          {attachments.length < 1 && (
+          {formData.files.length < 1 && (
             <span
               className="fs-15 fw-medium text-black "
               style={{ fontStyle: "italic", paddingLeft: "15px" }}
@@ -91,8 +123,8 @@ const WorkOrderInformation = () => {
           <div className="fs-14 fw-medium" style={{ color: "#0000007d" }}>
             Files uploaded:
           </div>
-          {attachments.length > 0 ? (
-            attachments.map((file, index) => (
+          {formData.files.length > 0 ? (
+            formData.files.map((file, index) => (
               <div
                 key={index}
                 className="fs-14 fw-medium d-flex align-items-center justify-content-between gap-3 mt-2 pt-1"
@@ -103,7 +135,8 @@ const WorkOrderInformation = () => {
                   style={{ color: "#D57D2A" }}
                   onClick={() => handleFileClick(file)}
                 >
-                  {file.length > 30 ? `${file.substring(0, 30)}...` : file}{" "}
+                  {/* {file.length > 30 ? `${file.substring(0, 30)}...` : file}{" "} */}
+                  {file.fileName}
                 </button>
                 <button
                   onClick={() => deleteFile(file)}

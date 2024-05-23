@@ -3,6 +3,7 @@ import "../Components/WorkOrders/WorkOrders.scss";
 import OtherPageNav from "../Components/WorkOrders/AddWorkOrder/OtherPageNav";
 
 import { NavLink, Outlet } from "react-router-dom";
+import WorkOrderFormProvider from "../Providers/WorkOrderFormProvider";
 
 const AddWorkOrder = () => {
   return (
@@ -42,7 +43,9 @@ const AddWorkOrder = () => {
                 </div>
               </div>
               <div className="work-order-contents">
-                <Outlet />
+                <WorkOrderFormProvider>
+                  <Outlet />
+                </WorkOrderFormProvider>
               </div>
             </div>
           </div>

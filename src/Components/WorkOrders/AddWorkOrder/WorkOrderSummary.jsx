@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { Modal } from "react-bootstrap";
-import { Link } from "react-router-dom";
+import { Link, redirect } from "react-router-dom";
+import { WorkOrderFormContext } from "../../../Providers/WorkOrderFormProvider";
+import { post } from "../../../Pages/Services/ApiHelper";
 
 const WorkOrderSummary = () => {
   const [imageShow, setImageShow] = useState(false);
@@ -11,6 +13,40 @@ const WorkOrderSummary = () => {
     setVideoShow(false);
     setDocumentShow(false);
   };
+  const {formData, setFormData } = useContext(WorkOrderFormContext)
+  console.log(formData)
+
+  function handleFormSubmit() {
+    const requestData = {
+      locatioId: formData.location.locationId,
+      categoryOfWorkId: formData.workCategory.id,
+      assetListIds: formData.assetList.map(v => v.id),
+      ticketTitle: formData.ticketTitle,
+      ticketDescription: formData.ticketDescription,
+      files: formData.files,
+      checklistIds: formData.checklist.map(v => v.id),
+      ticketPriorityId: formData.ticketPriority.id,
+      assignedTeam: formData.assignedTeam,
+      assignedUser: formData.assignedUser,
+      signatureRequiredToCompleteWork: formData.signatureRequiredToCompleteWork,
+      estimatedHours: formData.estimatedHours,
+      projectParts: formData.projectParts,
+      requestId: 0
+    }
+
+    const token = localStorage.getItem('bearerToken')
+    if (!token) {
+      return
+    }
+
+    post('https://saharadeskbackend.azurewebsites.net/api/Tickets/RaiseTicket', requestData, token)
+    .then(res => {
+      console.log(res)
+    })
+
+    redirect('/work-orders')
+
+  }
 
   return (
     <>
@@ -32,7 +68,7 @@ const WorkOrderSummary = () => {
               >
                 Location
               </div>
-              <div className="fs-14 fw-medium">Gigiri</div>
+              <div className="fs-14 fw-medium">{formData.location.locationName}</div>
             </div>
             <div className="col-md-3">
               <div
@@ -41,7 +77,7 @@ const WorkOrderSummary = () => {
               >
                 Asset Category
               </div>
-              <div className="fs-14 fw-medium">Pumps</div>
+              <div className="fs-14 fw-medium">{formData.assetCategory.categoryName}</div>
             </div>
             <div className="col-md-3">
               <div
@@ -50,7 +86,7 @@ const WorkOrderSummary = () => {
               >
                 Assets
               </div>
-              <div className="fs-14 fw-medium">Pump1, Pump 2</div>
+              <div className="fs-14 fw-medium">{formData.assetList.map(v => v.assetName+ ', ')}</div>
             </div>
           </div>
           <hr />
@@ -68,7 +104,7 @@ const WorkOrderSummary = () => {
               >
                 Work Order Title:
               </div>
-              <div className="fs-14 fw-medium">Pump Maintenance</div>
+              <div className="fs-14 fw-medium">{formData.ticketTitle}</div>
             </div>
             <div className="col-md-3">
               <div
@@ -77,7 +113,7 @@ const WorkOrderSummary = () => {
               >
                 Category of Work:
               </div>
-              <div className="fs-14 fw-medium">Engineering</div>
+              <div className="fs-14 fw-medium">{formData.ticketPriority.name}</div>
             </div>
             <div className="col-md-3">
               <div
@@ -86,7 +122,7 @@ const WorkOrderSummary = () => {
               >
                 Team:
               </div>
-              <div className="fs-14 fw-medium">AZ Engineers</div>
+              <div className="fs-14 fw-medium">{formData.assignedTeam.name}</div>
             </div>
             <div className="col-md-3">
               <div
@@ -95,7 +131,7 @@ const WorkOrderSummary = () => {
               >
                 Worker:
               </div>
-              <div className="fs-14 fw-medium">Not Assigned</div>
+              <div className="fs-14 fw-medium">{formData.assignedUser.name}</div>
             </div>
             <div className="col-md-6">
               <div
@@ -105,9 +141,7 @@ const WorkOrderSummary = () => {
                 Description:
               </div>
               <div className="fs-14 fw-medium" style={{ lineHeight: "1.3" }}>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-                eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-                enim ad minim veniam, quis nostrud exercitation
+                {formData.ticketDescription}
               </div>
             </div>
             <div className="col-md-3">
@@ -118,7 +152,7 @@ const WorkOrderSummary = () => {
                 Priority:
               </div>
               <div className="fs-14 fw-bold" style={{ color: "#D57D2A" }}>
-                HIGH
+                {formData.ticketPriority.name}
               </div>
             </div>
           </div>
@@ -137,7 +171,7 @@ const WorkOrderSummary = () => {
               >
                 Technician Signature Required?
               </div>
-              <div className="fs-14 fw-medium">Yes</div>
+              <div className="fs-14 fw-medium">{formData.signatureRequiredToCompleteWork === true ? 'Yes' : 'No'}</div>
             </div>
             <div className="col-md-3">
               <div
@@ -146,7 +180,7 @@ const WorkOrderSummary = () => {
               >
                 Estimated Hours
               </div>
-              <div className="fs-14 fw-medium">20 Hours</div>
+              <div className="fs-14 fw-medium">{formData.estimatedHours} Hours</div>
             </div>
           </div>
           <hr />
@@ -171,7 +205,9 @@ const WorkOrderSummary = () => {
           </div>
           <div className="row">
             <div className="col-md-3 d-grid gap-2">
-              <div className="fs-14 fw-medium">Pump Nozzle Checklist</div>
+              {formData.checklist.map(v => (
+                <div className="fs-14 fw-medium">{v.name}</div>
+              ))}
               <div className="fs-14 fw-medium">Pump Monitor Checklist</div>
             </div>
           </div>
@@ -196,21 +232,7 @@ const WorkOrderSummary = () => {
                   className="fs-14 fw-medium text-start"
                   style={{ color: "#D57D2A" }}
                 >
-                  Pump1.jpg
-                </button>
-                <button
-                  onClick={() => setVideoShow(true)}
-                  className="fs-14 fw-medium text-start"
-                  style={{ color: "#D57D2A" }}
-                >
-                  Pump1 Meter.mp4
-                </button>
-                <button
-                  onClick={() => setDocumentShow(true)}
-                  className="fs-14 fw-medium text-start"
-                  style={{ color: "#D57D2A" }}
-                >
-                  Calibration manual.pdf
+                  {formData.files[0].fileName}
                 </button>
               </div>
             </div>
@@ -223,13 +245,13 @@ const WorkOrderSummary = () => {
               <div className="d-flex align-items-center gap-4">
                 <span className="fs-16 fw-bold">Image</span>
                 <span className="fs-14" style={{ color: "#72777A" }}>
-                  Pump1.jpg
+                  {formData.files[0].fileName}
                 </span>
               </div>
               <div className="mt-4 pt-2 d-grid gap-4 modal-forms-content">
                 <div className="col-md-12">
                   <img
-                    src="/images/Pump1.jpg"
+                    src={formData.files[0].encodedFile}
                     alt=""
                     style={{ width: "100%" }}
                   />
@@ -353,9 +375,11 @@ const WorkOrderSummary = () => {
           >
             Previous
           </Link>
-          <Link to="/work-orders" className="next-btn ms-0">
+          <btn className="next-btn ms-0"
+            onClick={e => handleFormSubmit()}
+          >
             Submit
-          </Link>
+          </btn>
         </div>
       </div>
     </>
