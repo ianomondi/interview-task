@@ -48,14 +48,26 @@ const WorkOrderAssets = () => {
   const ASSETS_ENDPOINT = "Assets/GetAssetsByLocationAndCategory";
 
   const handleCheckboxChange = (asset) => {
+    let newAssetListIds;
     setSelectedAssets((prevSelectedAssets) => {
       if (prevSelectedAssets.includes(asset)) {
         return prevSelectedAssets.filter(
           (selectedAsset) => selectedAsset !== asset
         );
       } else {
+        const selectedAssetId = assetCheckData.find(
+          (item) => item.assetName === asset
+        ).id;
+        newAssetListIds = workOrderSummary.assetListIds
+          ? [...workOrderSummary.assetListIds, selectedAssetId]
+          : [selectedAssetId];
+
         return [...prevSelectedAssets, asset];
       }
+    });
+    setWorkOrderSummary({
+      ...workOrderSummary,
+      assetListIds: newAssetListIds,
     });
   };
 
@@ -211,8 +223,8 @@ const WorkOrderAssets = () => {
             </Dropdown.Menu>
           </Dropdown>
         </div>
-        {selectValue.location !== "Select" &&
-          selectValue.assetCategory !== "Select" && (
+        {selectedLocation.location !== "Select" &&
+          selectedAssetCategory.assetCategory !== "Select" && (
             <div className="col-md-6">
               <label>Asset (s)</label>
 

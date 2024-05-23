@@ -138,7 +138,7 @@ const WorkOrderDetails = () => {
       const workersDataRes = await apiWorkOrderServices(workersDataUrl, "GET");
       setWorkOrderSummary({
         ...workOrderSummary,
-        assignedTeam: { selectedTeamId, selectedTeam },
+        assignedTeam: { id: selectedTeamId, name: selectedTeam },
       });
       setAssignWorkerData(workersDataRes);
     }
@@ -214,7 +214,17 @@ const WorkOrderDetails = () => {
 
   const handleCheckboxChange = (eventKey) => {
     if (selectedCheckList.includes(eventKey)) return;
+    const checklistItemId = checklistItemsData.find(
+      (item) => item.name === eventKey
+    ).id;
     setSelectedCheckList([...selectedCheckList, eventKey]);
+    const checklistUpdate = workOrderSummary.checklistIds
+      ? [...workOrderSummary.checklistIds, checklistItemId]
+      : [checklistItemId];
+    setWorkOrderSummary({
+      ...workOrderSummary,
+      checklistIds: checklistUpdate,
+    });
   };
 
   const updateTitle = (event) => {
@@ -343,7 +353,7 @@ const WorkOrderDetails = () => {
               </Dropdown.Menu>
             </Dropdown>
           </div>
-          {selectValue.assignTeam !== "Select" && (
+          {selectedTeam !== "Select" && (
             <div className="col-md-6">
               <label>Assign Worker</label>
               <Dropdown
@@ -392,7 +402,13 @@ const WorkOrderDetails = () => {
                 value=""
                 id="required"
                 checked={isSigned}
-                onChange={(e) => setIsSigned(e.target.checked)}
+                onChange={(e) => {
+                  setIsSigned(e.target.checked);
+                  setWorkOrderSummary({
+                    ...workOrderSummary,
+                    signatureRequiredToCompleteWork: e.target.checked,
+                  });
+                }}
               />
               <label className="form-check-label" for="required">
                 Technician signature required
@@ -403,9 +419,16 @@ const WorkOrderDetails = () => {
             <label>Estimate Hours</label>
             <input
               type="number"
-              min="0"
+              min={0}
               className="input-box"
-              onChange={(e) => setEstimateHours(e.target.value)}
+              value={estimateHours}
+              onChange={(e) => {
+                setEstimateHours(parseFloat(e.target.value));
+                setWorkOrderSummary({
+                  ...workOrderSummary,
+                  estimatedHours: parseFloat(e.target.value),
+                });
+              }}
             />
           </div>
         </div>

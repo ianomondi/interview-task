@@ -14,6 +14,9 @@ const AddPartsModal = (props) => {
     "Select location of part"
   );
   const [projectParts, setProjectParts] = useRecoilState(store.projectParts);
+  const [workOrderSummary, setWorkOrderSummary] = useRecoilState(
+    store.workOrderSummary
+  );
   const [partData, setPartData] = useState([]);
   const [partLocationData, setPartLocationData] = useState([]);
 
@@ -70,6 +73,20 @@ const AddPartsModal = (props) => {
         quantity: selectedQuantity,
       };
       setProjectParts([...projectParts, part]);
+      const newProjectedPart = {
+        spareId: selectedPartId,
+        quantity: selectedQuantity,
+        locationId: 10,
+      };
+
+      const updateParts = workOrderSummary.projectedParts
+        ? [...workOrderSummary.projectedParts, newProjectedPart]
+        : [newProjectedPart];
+
+      setWorkOrderSummary({
+        ...workOrderSummary,
+        projectedParts: updateParts,
+      });
     }
   };
 
@@ -127,7 +144,7 @@ const AddPartsModal = (props) => {
               <input
                 className="modal-input-box"
                 type="number"
-                min="0"
+                min={0}
                 style={{
                   background: "#F1EFEF",
                   width: "100%",
@@ -137,7 +154,10 @@ const AddPartsModal = (props) => {
                   padding: "0 15px",
                 }}
                 placeholder="Enter quantity required"
-                onChange={(e) => setselectedQuantity(e.target.value)}
+                value={selectedQuantity}
+                onChange={(e) =>
+                  setselectedQuantity(parseFloat(e.target.value))
+                }
               />
             </div>
             <div className="col-md-12">

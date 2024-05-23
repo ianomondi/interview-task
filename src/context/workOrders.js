@@ -77,7 +77,7 @@ const selectedCheckList = atom({
 
 const estimateHours = atom({
   key: "estimateHours",
-  default: false,
+  default: null,
 });
 
 const isSigned = atom({

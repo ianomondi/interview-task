@@ -3,6 +3,7 @@ import { Modal } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import store from "../../../context";
 import { useRecoilState, useRecoilValue } from "recoil";
+import { apiWorkOrderServices } from "../../../utls/services";
 
 const WorkOrderSummary = () => {
   const [workOrderSummary, setWorkOrderSummary] = useRecoilState(
@@ -23,6 +24,9 @@ const WorkOrderSummary = () => {
   const workOrderTitle = useRecoilValue(store.workOrderTitle);
   const workOrderDescription = useRecoilValue(store.workOrderDescription);
 
+  // endpoint
+  const RAISE_TICKET_ENDPOINT = "Tickets/RaiseTicket";
+
   const [imageShow, setImageShow] = useState(false);
   const [videoShow, setVideoShow] = useState(false);
   const [documentShow, setDocumentShow] = useState(false);
@@ -30,6 +34,24 @@ const WorkOrderSummary = () => {
     setImageShow(false);
     setVideoShow(false);
     setDocumentShow(false);
+  };
+
+  const handleSubmit = async () => {
+    setWorkOrderSummary({
+      ...workOrderSummary,
+      files: [
+        {
+          encodedFile: "Base64 Encoded image",
+          fileName: "Logo.png",
+          url: "",
+          fileType: "png",
+        },
+      ],
+      requestId: 0,
+    });
+    const data = workOrderSummary;
+    const response = apiWorkOrderServices(RAISE_TICKET_ENDPOINT, "POST", data);
+    console.log("response", response);
   };
 
   return (
@@ -381,7 +403,11 @@ const WorkOrderSummary = () => {
           >
             Previous
           </Link>
-          <Link to="/work-orders" className="next-btn ms-0">
+          <Link
+            to="/work-orders"
+            onClick={handleSubmit}
+            className="next-btn ms-0"
+          >
             Submit
           </Link>
         </div>
