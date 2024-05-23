@@ -45,11 +45,21 @@ const formSlice = createSlice({
     addSelectedAssets: (state, action) => {
       state.selectedAssets.push(action.payload);
     },
+    removeSelectedAsset: (state, action) => {
+      state.selectedAssets = state.selectedAssets.filter(
+        (asset) => asset !== action.payload
+      );
+    },
     setAssetListId: (state, action) => {
       state.assetListIds = action.payload;
     },
     addAssetListId: (state, action) => {
       state.assetListIds.push(action.payload);
+    },
+    removeAssetListId: (state, action) => {
+      state.assetListIds = state.assetListIds.filter(
+        (id) => id !== action.payload
+      );
     },
     setTicketTitle: (state, action) => {
       state.ticketTitle = action.payload;
@@ -129,6 +139,8 @@ export const {
   setAssetListId,
   addAssetListId,
   addSelectedAssets,
+  removeAssetListId,
+  removeSelectedAsset,
 } = formSlice.actions;
 
 export default formSlice.reducer;

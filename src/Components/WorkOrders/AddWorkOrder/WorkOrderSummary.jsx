@@ -1,8 +1,13 @@
 import React, { useState } from "react";
-import { Modal } from "react-bootstrap";
-import { Link } from "react-router-dom";
+import { Modal, Spinner } from "react-bootstrap";
+import { useDispatch, useSelector } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
+import useMutateData from "../../../hooks/useMutateData";
+import { resetForm } from "../../../redux/formSlice";
 
 const WorkOrderSummary = () => {
+  const dispatch = useDispatch();
+  const formState = useSelector((state) => state.form);
   const [imageShow, setImageShow] = useState(false);
   const [videoShow, setVideoShow] = useState(false);
   const [documentShow, setDocumentShow] = useState(false);
@@ -10,6 +15,25 @@ const WorkOrderSummary = () => {
     setImageShow(false);
     setVideoShow(false);
     setDocumentShow(false);
+  };
+
+  const navigate = useNavigate();
+
+  console.log("formstate", formState);
+
+  const { mutate, isLoading } = useMutateData({
+    url: `Tickets/RaiseTicket`,
+    method: "POST",
+    onSuccessfullMutation: (data) => {
+      dispatch(resetForm());
+      navigate("/work-orders");
+    },
+    successMessage: `Successfully created a work order`,
+    errorMessage: "Work order creation failed",
+  });
+
+  const onSubmit = () => {
+    mutate(formState);
   };
 
   return (
@@ -32,7 +56,7 @@ const WorkOrderSummary = () => {
               >
                 Location
               </div>
-              <div className="fs-14 fw-medium">Gigiri</div>
+              <div className="fs-14 fw-medium">{formState?.location}</div>
             </div>
             <div className="col-md-3">
               <div
@@ -41,7 +65,7 @@ const WorkOrderSummary = () => {
               >
                 Asset Category
               </div>
-              <div className="fs-14 fw-medium">Pumps</div>
+              <div className="fs-14 fw-medium">{formState?.assetCategory}</div>
             </div>
             <div className="col-md-3">
               <div
@@ -50,7 +74,9 @@ const WorkOrderSummary = () => {
               >
                 Assets
               </div>
-              <div className="fs-14 fw-medium">Pump1, Pump 2</div>
+              {formState?.selectedAssets?.map((item) => (
+                <div className="fs-14 fw-medium">{item}</div>
+              ))}
             </div>
           </div>
           <hr />
@@ -68,7 +94,7 @@ const WorkOrderSummary = () => {
               >
                 Work Order Title:
               </div>
-              <div className="fs-14 fw-medium">Pump Maintenance</div>
+              <div className="fs-14 fw-medium">{formState?.ticketTitle}</div>
             </div>
             <div className="col-md-3">
               <div
@@ -77,7 +103,7 @@ const WorkOrderSummary = () => {
               >
                 Category of Work:
               </div>
-              <div className="fs-14 fw-medium">Engineering</div>
+              <div className="fs-14 fw-medium">{formState?.categoryOfWork}</div>
             </div>
             <div className="col-md-3">
               <div
@@ -86,7 +112,7 @@ const WorkOrderSummary = () => {
               >
                 Team:
               </div>
-              <div className="fs-14 fw-medium">AZ Engineers</div>
+              <div className="fs-14 fw-medium">{formState?.assignedTeam?.name}</div>
             </div>
             <div className="col-md-3">
               <div
@@ -95,7 +121,7 @@ const WorkOrderSummary = () => {
               >
                 Worker:
               </div>
-              <div className="fs-14 fw-medium">Not Assigned</div>
+              <div className="fs-14 fw-medium">{formState?.assignedUser?.name}</div>
             </div>
             <div className="col-md-6">
               <div
@@ -105,9 +131,7 @@ const WorkOrderSummary = () => {
                 Description:
               </div>
               <div className="fs-14 fw-medium" style={{ lineHeight: "1.3" }}>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-                eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-                enim ad minim veniam, quis nostrud exercitation
+                {formState?.ticketDescription}
               </div>
             </div>
             <div className="col-md-3">
@@ -118,7 +142,7 @@ const WorkOrderSummary = () => {
                 Priority:
               </div>
               <div className="fs-14 fw-bold" style={{ color: "#D57D2A" }}>
-                HIGH
+                {formState?.ticketPriority}
               </div>
             </div>
           </div>
@@ -137,7 +161,9 @@ const WorkOrderSummary = () => {
               >
                 Technician Signature Required?
               </div>
-              <div className="fs-14 fw-medium">Yes</div>
+              <div className="fs-14 fw-medium">
+                {formState?.signatureRequiredToCompleteWork ? "Yes" : "No"}
+              </div>
             </div>
             <div className="col-md-3">
               <div
@@ -146,7 +172,9 @@ const WorkOrderSummary = () => {
               >
                 Estimated Hours
               </div>
-              <div className="fs-14 fw-medium">20 Hours</div>
+              <div className="fs-14 fw-medium">
+                {formState?.estimatedHours} Hours
+              </div>
             </div>
           </div>
           <hr />
@@ -156,11 +184,14 @@ const WorkOrderSummary = () => {
           >
             PROJECTED PARTS DETAILS
           </div>
-          <div className="row">
-            <div className="col-md-3 d-grid gap-2">
-              <div className="fs-14 fw-medium">Part A - 100005, 3 Pieces</div>
-              <div className="fs-14 fw-medium">Part A - 100005, 3 Pieces</div>
-            </div>
+          <div className="col-md-3 d-grid gap-2">
+            {formState?.projectedParts?.map((part) => (
+              <div className="row" key={part.partId}>
+                <div className="fs-14 fw-medium">
+                  {part?.partName}, {part?.quantity} Pieces
+                </div>
+              </div>
+            ))}
           </div>
           <hr />
           <div
@@ -190,29 +221,17 @@ const WorkOrderSummary = () => {
               >
                 Files:
               </div>
-              <div className="d-grid gap-2 mt-2">
-                <button
-                  onClick={() => setImageShow(true)}
-                  className="fs-14 fw-medium text-start"
-                  style={{ color: "#D57D2A" }}
-                >
-                  Pump1.jpg
-                </button>
-                <button
-                  onClick={() => setVideoShow(true)}
-                  className="fs-14 fw-medium text-start"
-                  style={{ color: "#D57D2A" }}
-                >
-                  Pump1 Meter.mp4
-                </button>
-                <button
-                  onClick={() => setDocumentShow(true)}
-                  className="fs-14 fw-medium text-start"
-                  style={{ color: "#D57D2A" }}
-                >
-                  Calibration manual.pdf
-                </button>
-              </div>
+              {formState?.files?.map((file) => (
+                <div className="d-grid gap-2 mt-2">
+                  <button
+                    onClick={() => setImageShow(true)}
+                    className="fs-14 fw-medium text-start"
+                    style={{ color: "#D57D2A" }}
+                  >
+                    {file?.fileName}
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -353,9 +372,23 @@ const WorkOrderSummary = () => {
           >
             Previous
           </Link>
-          <Link to="/work-orders" className="next-btn ms-0">
-            Submit
-          </Link>
+          <button
+            type="button"
+            onClick={() => onSubmit()}
+            className="next-btn ms-0"
+          >
+            {isLoading ? (
+              <Spinner
+                as="span"
+                animation="grow"
+                size="sm"
+                role="status"
+                aria-hidden="true"
+              />
+            ) : (
+              "Submit"
+            )}
+          </button>
         </div>
       </div>
     </>

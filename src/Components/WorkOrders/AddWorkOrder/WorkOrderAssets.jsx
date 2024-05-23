@@ -9,14 +9,15 @@ import {
   setAssetCategory,
   setLocation,
   setSelectedAssets,
-  addSelectedAssets
+  addSelectedAssets,
+  addAssetListId,
+  removeAssetListId,
+  removeSelectedAsset,
 } from "../../../redux/formSlice";
 
 const WorkOrderAssets = () => {
   const dispatch = useDispatch();
   const formState = useSelector((state) => state.form);
-
-  console.log("formstate", formState)
 
   const [selectValue, setSelectValue] = useState({
     asset: "Select",
@@ -27,9 +28,13 @@ const WorkOrderAssets = () => {
 
   const [selectedAssets, setSelectedAssets] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState("Select");
-  const [selectedLocationId, setSelectedLocationId] = useState(formState.locationId);
+  const [selectedLocationId, setSelectedLocationId] = useState(
+    formState.locationId
+  );
   const [selectedAssetCategory, setSelectedAssetCategory] = useState("Select");
-  const [selectedAssetCategoryId, setSelectedAssetCategoryId] = useState(formState.assetCategoryId);
+  const [selectedAssetCategoryId, setSelectedAssetCategoryId] = useState(
+    formState.assetCategoryId
+  );
 
   //location search input
   const [locationSearch, setLocationSearch] = useState("");
@@ -67,9 +72,25 @@ const WorkOrderAssets = () => {
   };
 
   const handleChecklistSelect = (event) => {
-    const checklistId = parseInt(event.target.value);
+    console.log("asset", event?.target?.value);
+
+    setSelectedAssets((prevSelectedAssets) => {
+      if (prevSelectedAssets.includes(event)) {
+        return prevSelectedAssets.filter(
+          (selectedAsset) => selectedAsset !== event
+        );
+      } else {
+        return [...prevSelectedAssets, event];
+      }
+    });
+    const assetId = parseInt(event.target.value);
+    const assetName = event.target.id;
     if (event.target.checked) {
-      dispatch(addSelectedAssets(checklistId));
+      dispatch(addAssetListId(assetId));
+      dispatch(addSelectedAssets(assetName));
+    } else {
+      dispatch(removeAssetListId(assetId));
+      dispatch(removeSelectedAsset(assetName));
     }
   };
 
@@ -105,6 +126,8 @@ const WorkOrderAssets = () => {
     );
     setAssetSearch("");
   };
+
+  console.log("assets", formState?.selectedAssets)
 
   const { data: locationData } = usefetchData(
     ["location"],
@@ -240,71 +263,61 @@ const WorkOrderAssets = () => {
             </Dropdown.Menu>
           </Dropdown>
         </div>
-        {formState.location !== "" &&
-          formState.assetCategory !== "" && (
-            <div className="col-md-6">
-              <label>Asset (s)</label>
+        {formState.location !== "" && formState.assetCategory !== "" && (
+          <div className="col-md-6">
+            <label>Asset (s)</label>
 
-              <div className="dropdown Checklists-dropdown assets-checklist select__form">
-                <button
-                  className="btn checklists-btn"
-                  data-bs-toggle="dropdown"
-                >
-                  <div>
-                    Select
-                    {selectedAssets.length > 0 && (
-                      <span style={{ color: "#000" }}>
-                        {selectedAssets.join(", ")}
-                      </span>
-                    )}
-                  </div>
-                  <DownIcon />
-                </button>
-                <ul className="dropdown-menu">
-                  <form className="dropdown-search ps-0">
-                    <button disabled>
-                      <SearchIcon />
-                    </button>
-                    <input
-                      onChange={(e) => setAssetCheckSearch(e.target.value)}
-                      type="text"
-                      placeholder="Search"
-                      value={assetCheckSearch}
-                    />
-                  </form>
-                  <ul className="dropdown-item-content">
-                    {filteredAssetCheckData &&
-                      filteredAssetCheckData.map((item, index) => (
-                        <li key={index}>
-                          <div className="form-check">
-                            <input
-                              className="form-check-input"
-                              type="checkbox"
-                              // value=""
-                              // id={item.assetName}
-                              // checked={selectedAssets.includes(item.assetName)}
-                              // onChange={() =>
-                              //   handleCheckboxChange(item.assetName)
-                              // }
-                              value={item.id}
-                            id={item.name}
-                            checked={formState.checklistIds.includes(item.id)}
-                            onChange={handleCheckboxChange}
-                            />
-                            <label
-                              className="form-check-label"
-                              htmlFor={item.assetName}
-                            >
-                              {item.assetName}
-                            </label>
-                          </div>
-                        </li>
-                      ))}
-                  </ul>
+            <div className="dropdown Checklists-dropdown assets-checklist select__form">
+              <button className="btn checklists-btn" data-bs-toggle="dropdown">
+                <div>
+                  Select
+                  {formState?.selectedAssets.length > 0 && (
+                    <span style={{ color: "#000" }}>
+                      {formState?.selectedAssets.join(", ")}
+                    </span>
+                  )}
+                </div>
+                <DownIcon />
+              </button>
+              <ul className="dropdown-menu">
+                <form className="dropdown-search ps-0">
+                  <button disabled>
+                    <SearchIcon />
+                  </button>
+                  <input
+                    onChange={(e) => setAssetCheckSearch(e.target.value)}
+                    type="text"
+                    placeholder="Search"
+                    value={formState?.selectedAsset?.join(", ")}
+                  />
+                </form>
+                <ul className="dropdown-item-content">
+                  {filteredAssetCheckData &&
+                    filteredAssetCheckData.map((item, index) => (
+                      <li key={index}>
+                        <div className="form-check">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            value={item.id}
+                            id={item.assetName}
+                            checked={formState.assetListIds.includes(item.id)}
+                            onChange={handleChecklistSelect}
+                          />
+                          <label
+                            className="form-check-label"
+                            htmlFor={item.assetName}
+                          >
+                            {item.assetName}
+                          </label>
+                        </div>
+                      </li>
+                    ))}
                 </ul>
-              </div>
+              </ul>
             </div>
-          )}
+          </div>
+        )}
       </div>
 
       <div className="details-buttons pt-lg-5">

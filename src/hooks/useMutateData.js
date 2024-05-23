@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'react-toastify';
+// import { toast } from 'react-toastify';
 import { axiosInterceptor } from '../utls/axiosInterceptor';
+import toast from 'react-hot-toast';
 
 const useMutateData = ({
   url,

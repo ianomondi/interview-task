@@ -34,7 +34,6 @@ const WorkOrderDetails = () => {
   //part search input
   const [partSearch, setPartSearch] = useState("");
 
-  const projected = [];
 
   const locationId = formState.locationId;
   // const categoryofworkId = location.state.categoryofworkId;
@@ -110,7 +109,6 @@ const WorkOrderDetails = () => {
     true
   );
 
-  console.log("priority", priority);
 
   // get parts
   const { data: parts } = usefetchData(
@@ -139,7 +137,6 @@ const WorkOrderDetails = () => {
     true
   );
 
-  console.log("work data", categoryofworkId);
 
   //category of work search input
   const [workSearch, setWorkSearch] = useState("");
@@ -176,7 +173,6 @@ const WorkOrderDetails = () => {
       return fullName.includes(searchTerm);
     });
 
-  console.log("team data", filteredAssignWorkerData);
 
   //filter project parts data
   const filteredProjectParts = projectParts.filter((item) => {
@@ -205,7 +201,6 @@ const WorkOrderDetails = () => {
   };
 
   const handleWorkSelect = (eventKey) => {
-    alert(locationId);
     const category = workData.find(
       (item) => item.categoryOfWorkName === eventKey
     );
@@ -221,20 +216,26 @@ const WorkOrderDetails = () => {
     setWorkSearch("");
   };
 
-  console.log("Category ofwork", categoryofworkId);
 
   const handleTeamSelect = (eventKey) => {
     const team = teamData.find((item) => item.teamName === eventKey);
+    console.log(team)
     setselectedTeam(team.teamName);
+    console.log("selected team", selectedTeam)
     setTeamId(team.id);
     setSelectValue({ ...selectValue, assignTeam: eventKey });
-    dispatch(setAssignedTeam({ name: team.categoryOfWorkName, id: team.id }));
+    dispatch(setAssignedTeam({ name: team.teamName, id: team.id }));
     setTeamSearch("");
   };
 
+
   const handleAssignWorkerSelect = (eventKey) => {
+    const worker = assignWorkerData?.find((item)=> item?.user?.userFirstName=== eventKey)
+    console.log("assigned worker", worker)
+    console.log("eventname", eventKey)
     setselectedAssignWorker(eventKey);
     setSelectValue({ ...selectValue, assignAdditionalTeam: eventKey });
+    dispatch(setAssignedUser({id: worker?.user?.id, name: worker?.user?.userFirstName}))
     setAssignWorkerSearch("");
   };
 
@@ -343,7 +344,7 @@ const WorkOrderDetails = () => {
                   selectedTeam !== "Select" ? "selected" : ""
                 }`}
               >
-                {selectedTeam}
+                {formState?.assignedTeam?.name}
               </Dropdown.Toggle>
               <Dropdown.Menu>
                 <form className="dropdown-search">
@@ -368,7 +369,7 @@ const WorkOrderDetails = () => {
               </Dropdown.Menu>
             </Dropdown>
           </div>
-          {selectValue.assignTeam !== "Select" && (
+          {formState?.assignedTeam?.name && (
             <div className="col-md-6">
               <label>Assign Worker</label>
               <Dropdown
@@ -380,7 +381,7 @@ const WorkOrderDetails = () => {
                     selectedAssignWorker !== "Select" ? "selected" : ""
                   }`}
                 >
-                  {selectedAssignWorker}
+                  {formState?.assignedUser?.name}
                 </Dropdown.Toggle>
                 <Dropdown.Menu>
                   <form className="dropdown-search">
@@ -642,7 +643,7 @@ const WorkOrderDetails = () => {
                 </li>
                 
 
-                
+
                 <ul className="dropdown-item-content my-2">
                   {filteredCheckList &&
                     filteredCheckList.map((check, index) => (
