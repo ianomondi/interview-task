@@ -8,64 +8,51 @@ import DelateIcon2 from "../../../Assets/Icons/DelateIcon2";
 import { Dropdown, Modal } from "react-bootstrap";
 import { apiWorkOrderServices } from "../../../utls/services";
 import store from "../../../context";
-import { useRecoilState, useRecoilValue } from "recoil";
+import { useRecoilValue } from "recoil";
+import useInitializeRecoilStates from "../../../hooks/useInitializeRecoilStates ";
 
 const WorkOrderDetails = () => {
-  const [workOrderSummary, setWorkOrderSummary] = useRecoilState(
-    store.workOrderSummary
-  );
-
-  const [addPartShow, setAddPartShow] = useRecoilState(store.addPartShow);
-  const [selectedWork, setselectedWork] = useRecoilState(store.selectedWork);
-  const [selectedTeam, setselectedTeam] = useRecoilState(store.selectedTeam);
-  const [selectedAssignWorker, setselectedAssignWorker] = useRecoilState(
-    store.selectedAssignWorker
-  );
-  const [selectedPart, setSelectedPart] = useRecoilState(store.selectedPart);
-  const [workData, setworkData] = useRecoilState(store.workData);
-  const [priorityData, setPriorityData] = useRecoilState(store.priorityData);
-  const [teamData, setTeamData] = useRecoilState(store.teamData);
-  const [workOrderTitle, setWorkOrderTitle] = useRecoilState(
-    store.workOrderTitle
-  );
-  const [workOrderDescription, setWorkOrderDescription] = useRecoilState(
-    store.workOrderDescription
-  );
-  const [assignWorkerData, setAssignWorkerData] = useRecoilState(
-    store.assignWorkerData
-  );
-  const [checklistItemsData, setChecklistItemsData] = useRecoilState(
-    store.checklistItemsData
-  );
-  const [selectedCheckList, setSelectedCheckList] = useRecoilState(
-    store.selectedCheckList
-  );
-  const [estimateHours, setEstimateHours] = useRecoilState(store.estimateHours);
-  const [isSigned, setIsSigned] = useRecoilState(store.isSigned);
-  const [selectedPriority, setSelectedPriority] = useRecoilState(
-    store.selectedPriority
-  );
-  //part search input
+  const {
+    workOrderSummary,
+    setWorkOrderSummary,
+    addPartShow,
+    setAddPartShow,
+    selectedWork,
+    setSelectedWork,
+    selectedTeam,
+    setSelectedTeam,
+    selectedAssignWorker,
+    setSelectedAssignWorker,
+    selectedPart,
+    setSelectedPart,
+    workData,
+    setWorkData,
+    priorityData,
+    setPriorityData,
+    teamData,
+    setTeamData,
+    workOrderTitle,
+    setWorkOrderTitle,
+    workOrderDescription,
+    setWorkOrderDescription,
+    assignWorkerData,
+    setAssignWorkerData,
+    checklistItemsData,
+    setChecklistItemsData,
+    selectedCheckList,
+    setSelectedCheckList,
+    estimateHours,
+    setEstimateHours,
+    isSigned,
+    setIsSigned,
+    selectedPriority,
+    setSelectedPriority,
+    projectParts,
+    setProjectParts,
+  } = useInitializeRecoilStates();
   const [partSearch, setPartSearch] = useState("");
-
-  const [projectParts, setProjectParts] = useRecoilState(store.projectParts);
   const [show, setShow] = useState(false);
-  const handleClose = () => setShow(false);
-  const handleShow = () => setShow(true);
-  //checklist search
   const [search, setSearch] = useState("");
-
-  const handlePriorityClick = (priority) => {
-    setSelectedPriority(priority);
-    const priorityId = priorityData.find(
-      (item) => item.ticketPrioritiesName === priority
-    ).id;
-    setWorkOrderSummary({
-      ...workOrderSummary,
-      ticketPriorityId: priorityId,
-    });
-  };
-
   const [selectValue, setSelectValue] = useState({
     asset: "Select",
     category: "Select",
@@ -76,7 +63,9 @@ const WorkOrderDetails = () => {
     store.locatonAndAssetCategoryIds
   );
 
-  //Endpoints
+  const handleClose = () => setShow(false);
+  const handleShow = () => setShow(true);
+
   const CATEGORY_OF_WORKS = "CategoryOfWorks";
   const PRIORITY_ENDPOINT = "Tickets/GetAllTicketPriorities";
   const GET_TEAMS_ENDPOINT = "Team/GetTeamsToAssignTicket";
@@ -84,47 +73,33 @@ const WorkOrderDetails = () => {
   const CHECKLIST_ENDPOINT =
     "Checklists/GetChecklists?PageNumber=1&PageSize=100";
 
-  const handlePartSelect = (eventKey) => {
-    setSelectedPart(eventKey);
-    setSelectValue({ ...selectValue, part: eventKey });
-  };
-
   const updateFormData = async () => {
-    const categoryOfWorkRes = await apiWorkOrderServices(
-      CATEGORY_OF_WORKS,
-      "GET"
-    );
-
-    const priorityDataRes = await apiWorkOrderServices(
-      PRIORITY_ENDPOINT,
-      "GET"
-    );
-
-    const checklistItemsDataRes = await apiWorkOrderServices(
-      CHECKLIST_ENDPOINT,
-      "GET"
-    );
+    const [categoryOfWorkRes, priorityDataRes, checklistItemsDataRes] =
+      await Promise.all([
+        apiWorkOrderServices(CATEGORY_OF_WORKS, "GET"),
+        apiWorkOrderServices(PRIORITY_ENDPOINT, "GET"),
+        apiWorkOrderServices(CHECKLIST_ENDPOINT, "GET"),
+      ]);
 
     setChecklistItemsData(checklistItemsDataRes.data);
-    setworkData(categoryOfWorkRes);
+    setWorkData(categoryOfWorkRes);
     setPriorityData(priorityDataRes);
   };
 
   const updateTeamsList = async (selectedWork) => {
-    if (selectedWork !== "Select") {
+    if (selectedWork !== "Select" && selectedLocationAndCategoryId.length > 0) {
       const selectedWorkId = workData.find(
         (item) => item.categoryOfWorkName === selectedWork
       ).id;
-      if (selectedLocationAndCategoryId.length > 0) {
-        const [selectedLocationId] = [...selectedLocationAndCategoryId];
-        const teamDataUrl = `${GET_TEAMS_ENDPOINT}?locationId=${selectedLocationId}&categoryofworkId=${selectedWorkId}`;
-        const teamDataRes = await apiWorkOrderServices(teamDataUrl, "GET");
-        setWorkOrderSummary({
-          ...workOrderSummary,
-          categoryOfWorkId: selectedWorkId,
-        });
-        setTeamData(teamDataRes);
-      }
+      const [selectedLocationId] = selectedLocationAndCategoryId;
+      const teamDataUrl = `${GET_TEAMS_ENDPOINT}?locationId=${selectedLocationId}&categoryofworkId=${selectedWorkId}`;
+      const teamDataRes = await apiWorkOrderServices(teamDataUrl, "GET");
+
+      setWorkOrderSummary({
+        ...workOrderSummary,
+        categoryOfWorkId: selectedWorkId,
+      });
+      setTeamData(teamDataRes);
     }
   };
 
@@ -133,9 +108,9 @@ const WorkOrderDetails = () => {
       const selectedTeamId = teamData.find(
         (item) => item.teamName === selectedTeam
       ).id;
-
       const workersDataUrl = `${GET_WORKERS_ENDPOINT}/${selectedTeamId}`;
       const workersDataRes = await apiWorkOrderServices(workersDataUrl, "GET");
+
       setWorkOrderSummary({
         ...workOrderSummary,
         assignedTeam: { id: selectedTeamId, name: selectedTeam },
@@ -189,18 +164,34 @@ const WorkOrderDetails = () => {
     return item.part.toLowerCase().includes(partSearch.toLowerCase());
   });
 
+  const handlePriorityClick = (priority) => {
+    setSelectedPriority(priority);
+    const priorityId = priorityData.find(
+      (item) => item.ticketPrioritiesName === priority
+    ).id;
+    setWorkOrderSummary({
+      ...workOrderSummary,
+      ticketPriorityId: priorityId,
+    });
+  };
+
+  const handlePartSelect = (eventKey) => {
+    setSelectedPart(eventKey);
+    setSelectValue({ ...selectValue, part: eventKey });
+  };
+
   const handleWorkSelect = (eventKey) => {
-    setselectedWork(eventKey);
+    setSelectedWork(eventKey);
     setSelectValue({ ...selectValue, category: eventKey });
     setWorkSearch("");
   };
   const handleTeamSelect = (eventKey) => {
-    setselectedTeam(eventKey);
+    setSelectedTeam(eventKey);
     setSelectValue({ ...selectValue, assignTeam: eventKey });
     setTeamSearch("");
   };
   const handleAssignWorkerSelect = (eventKey) => {
-    setselectedAssignWorker(eventKey);
+    setSelectedAssignWorker(eventKey);
     setSelectValue({ ...selectValue, assignAdditionalTeam: eventKey });
     const workerId = assignWorkerData
       .map(({ user }) => user)

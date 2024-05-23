@@ -23,6 +23,7 @@ const WorkOrderSummary = () => {
   const selectedCheckList = useRecoilValue(store.selectedCheckList);
   const workOrderTitle = useRecoilValue(store.workOrderTitle);
   const workOrderDescription = useRecoilValue(store.workOrderDescription);
+  const attachments = useRecoilValue(store.attachments);
 
   // endpoint
   const RAISE_TICKET_ENDPOINT = "Tickets/RaiseTicket";
@@ -37,21 +38,34 @@ const WorkOrderSummary = () => {
   };
 
   const handleSubmit = async () => {
+    if (!workOrderSummary.files) {
+      setWorkOrderSummary({
+        ...workOrderSummary,
+        files: [
+          {
+            encodedFile: "Base64 Encoded image",
+            fileName: "Logo.png",
+            url: "",
+            fileType: "png",
+          },
+        ],
+        requestId: 0,
+      });
+    }
+
     setWorkOrderSummary({
       ...workOrderSummary,
-      files: [
-        {
-          encodedFile: "Base64 Encoded image",
-          fileName: "Logo.png",
-          url: "",
-          fileType: "png",
-        },
-      ],
       requestId: 0,
     });
+
     const data = workOrderSummary;
-    const response = apiWorkOrderServices(RAISE_TICKET_ENDPOINT, "POST", data);
-    console.log("response", response);
+    const response = await apiWorkOrderServices(
+      RAISE_TICKET_ENDPOINT,
+      "POST",
+      data
+    );
+    alert(response);
+    return response;
   };
 
   return (
@@ -241,27 +255,39 @@ const WorkOrderSummary = () => {
                 Files:
               </div>
               <div className="d-grid gap-2 mt-2">
-                <button
-                  onClick={() => setImageShow(true)}
-                  className="fs-14 fw-medium text-start"
-                  style={{ color: "#D57D2A" }}
-                >
-                  Pump1.jpg
-                </button>
-                <button
-                  onClick={() => setVideoShow(true)}
-                  className="fs-14 fw-medium text-start"
-                  style={{ color: "#D57D2A" }}
-                >
-                  Pump1 Meter.mp4
-                </button>
-                <button
-                  onClick={() => setDocumentShow(true)}
-                  className="fs-14 fw-medium text-start"
-                  style={{ color: "#D57D2A" }}
-                >
-                  Calibration manual.pdf
-                </button>
+                {attachments.map((item, index) => {
+                  return (
+                    <div key={index}>
+                      {item.fileType === "image" && (
+                        <button
+                          onClick={() => setImageShow(true)}
+                          className="fs-14 fw-medium text-start"
+                          style={{ color: "#D57D2A" }}
+                        >
+                          {item.fileName}
+                        </button>
+                      )}
+                      {item.fileType === "video" && (
+                        <button
+                          onClick={() => setVideoShow(true)}
+                          className="fs-14 fw-medium text-start"
+                          style={{ color: "#D57D2A" }}
+                        >
+                          {item.fileName}
+                        </button>
+                      )}
+                      {item.fileType === "document" && (
+                        <button
+                          onClick={() => setDocumentShow(true)}
+                          className="fs-14 fw-medium text-start"
+                          style={{ color: "#D57D2A" }}
+                        >
+                          {item.fileName}
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>

@@ -3,9 +3,13 @@ import AttachIcon from "../../../Assets/Icons/AttachIcon";
 import { Link } from "react-router-dom";
 import { Modal } from "react-bootstrap";
 import DeleteIcon from "../../../Assets/Icons/DeleteIcon";
+import store from "../../../context";
+import { useRecoilState } from "recoil";
+import useInitializeRecoilStates from "../../../hooks/useInitializeRecoilStates ";
 
 const WorkOrderInformation = () => {
-  const [attachments, setAttachments] = useState([]);
+  const { workOrderSummary, setWorkOrderSummary } = useInitializeRecoilStates();
+  const [attachments, setAttachments] = useRecoilState(store.attachments);
   const [attachShow, setAttachShow] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedFileType, setSelectedFileType] = useState(null);
@@ -16,26 +20,58 @@ const WorkOrderInformation = () => {
     setSelectedFileType(null);
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const selectedFiles = Array.from(e.target.files);
-    const newFiles = selectedFiles.filter(
-      (file) => !attachments.includes(file.name)
+    const newFiles = await Promise.all(
+      selectedFiles.map(async (file) => {
+        const base64 = await toBase64(file);
+        return {
+          encodedFile: base64,
+          fileName: file.name,
+          url: "",
+          fileType: getFileType(file.name),
+        };
+      })
     );
     setAttachments((prevAttachments) => [
       ...prevAttachments,
-      ...newFiles.map((file) => file.name),
+      ...newFiles.filter(
+        (newFile) =>
+          !prevAttachments.some((file) => file.fileName === newFile.fileName)
+      ),
     ]);
+    setWorkOrderSummary((workOrderSummary) => ({
+      ...workOrderSummary,
+      files: workOrderSummary.files
+        ? [...workOrderSummary.files, ...newFiles]
+        : [...newFiles],
+    }));
+  };
+
+  const toBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
   };
 
   const deleteFile = (attachment) => {
     setAttachments((prevAttachments) =>
-      prevAttachments.filter((file) => file !== attachment)
+      prevAttachments.filter((file) => file.fileName !== attachment.fileName)
     );
+    setWorkOrderSummary((workOrderSummary) => ({
+      ...workOrderSummary,
+      files: workOrderSummary.files.filter(
+        (file) => file.fileName !== attachment.fileName
+      ),
+    }));
   };
 
   const handleFileClick = (file) => {
-    setSelectedFile(file);
-    const fileType = getFileType(file);
+    setSelectedFile(file.fileName);
+    const fileType = getFileType(file.fileName);
     setSelectedFileType(fileType);
     setAttachShow(true);
   };
@@ -103,7 +139,9 @@ const WorkOrderInformation = () => {
                   style={{ color: "#D57D2A" }}
                   onClick={() => handleFileClick(file)}
                 >
-                  {file.length > 30 ? `${file.substring(0, 30)}...` : file}{" "}
+                  {file.fileName.length > 30
+                    ? `${file.fileName.substring(0, 30)}...`
+                    : file.fileName}{" "}
                 </button>
                 <button
                   onClick={() => deleteFile(file)}

@@ -125,6 +125,11 @@ const workOrderDescription = atom({
   default: [],
 });
 
+const attachments = atom({
+  key: "attachments",
+  default: [],
+});
+
 export default {
   workOrderSummary,
   addPartShow,
@@ -151,4 +156,5 @@ export default {
   assetCheckData,
   workOrderTitle,
   workOrderDescription,
+  attachments,
 };

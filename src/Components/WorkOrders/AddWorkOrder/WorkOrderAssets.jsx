@@ -6,30 +6,27 @@ import SearchIcon from "../../../Assets/Icons/SearchIcon";
 import store from "../../../context";
 import { useRecoilState } from "recoil";
 import { apiWorkOrderServices } from "../../../utls/services";
+import useInitializeRecoilStates from "../../../hooks/useInitializeRecoilStates ";
 
 const WorkOrderAssets = () => {
+  const {
+    workOrderSummary,
+    setWorkOrderSummary,
+    setLocatonAndAssetCategoryIds,
+    selectedAssets,
+    setSelectedAssets,
+    selectedLocation,
+    setSelectedLocation,
+    selectedAssetCategory,
+    setSelectedAssetCategory,
+  } = useInitializeRecoilStates();
+
   const [selectValue, setSelectValue] = useState({
     asset: "Select",
     location: "Select",
     assetCategory: "Select",
     assignAdditionalTeam: "Select",
   });
-  const [workOrderSummary, setWorkOrderSummary] = useRecoilState(
-    store.workOrderSummary
-  );
-  const [locatonAndAssetCategoryIds, setlocatonAndAssetCategoryIds] =
-    useRecoilState(store.locatonAndAssetCategoryIds);
-
-  const [selectedAssets, setSelectedAssets] = useRecoilState(
-    store.selectedAssets
-  );
-  const [selectedLocation, setSelectedLocation] = useRecoilState(
-    store.selectedLocation
-  );
-  const [selectedAssetCategory, setSelectedAssetCategory] = useRecoilState(
-    store.selectedAssetCategory
-  );
-
   // Form Data
   const [locationData, setLocationData] = useRecoilState(store.locationData);
   const [assetData, setAssetData] = useRecoilState(store.assetData);
@@ -105,7 +102,7 @@ const WorkOrderAssets = () => {
         (item) => item.assetCategoryName === selectedAssetCategory
       ).id;
       const url = `${ASSETS_ENDPOINT}/${selectedLocationId}/${selectedAssetCategoryId}`;
-      setlocatonAndAssetCategoryIds([
+      setLocatonAndAssetCategoryIds([
         selectedLocationId,
         selectedAssetCategoryId,
       ]);
@@ -224,7 +221,7 @@ const WorkOrderAssets = () => {
           </Dropdown>
         </div>
         {selectedLocation.location !== "Select" &&
-          selectedAssetCategory.assetCategory !== "Select" && (
+          selectedAssetCategory !== "Select" && (
             <div className="col-md-6">
               <label>Asset (s)</label>
 
