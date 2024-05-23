@@ -1,10 +1,11 @@
 import React, { useContext, useState } from "react";
 import { Modal } from "react-bootstrap";
-import { Link, redirect } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { WorkOrderFormContext } from "../../../Providers/WorkOrderFormProvider";
 import { post } from "../../../Pages/Services/ApiHelper";
 
 const WorkOrderSummary = () => {
+  let navigate = useNavigate();
   const [imageShow, setImageShow] = useState(false);
   const [videoShow, setVideoShow] = useState(false);
   const [documentShow, setDocumentShow] = useState(false);
@@ -14,13 +15,12 @@ const WorkOrderSummary = () => {
     setDocumentShow(false);
   };
   const {formData, setFormData } = useContext(WorkOrderFormContext)
-  console.log(formData)
 
   function handleFormSubmit() {
     const requestData = {
-      locatioId: formData.location.locationId,
+      locationId: formData.location.locationId,
       categoryOfWorkId: formData.workCategory.id,
-      assetListIds: formData.assetList.map(v => v.id),
+      assetListIds: formData.assetList.map(v => v.assetListId),
       ticketTitle: formData.ticketTitle,
       ticketDescription: formData.ticketDescription,
       files: formData.files,
@@ -29,8 +29,8 @@ const WorkOrderSummary = () => {
       assignedTeam: formData.assignedTeam,
       assignedUser: formData.assignedUser,
       signatureRequiredToCompleteWork: formData.signatureRequiredToCompleteWork,
-      estimatedHours: formData.estimatedHours,
-      projectParts: formData.projectParts,
+      estimatedHours: Number(formData.estimatedHours),
+      projectedParts: formData.projectedParts.map(v => ({spareId: v.id, quantity: v.quantity, location: 10})),
       requestId: 0
     }
 
@@ -42,9 +42,49 @@ const WorkOrderSummary = () => {
     post('https://saharadeskbackend.azurewebsites.net/api/Tickets/RaiseTicket', requestData, token)
     .then(res => {
       console.log(res)
+      if (res.succeeded) {
+        setFormData({
+          location: {
+            locationName: '',
+            locationId: null
+          },
+          assetCategory: {
+            categoryName: '',
+            categoryId: null
+          },
+          assetList: [],
+          ticketTitle: '',
+          ticketDescription: '',
+          workCategory: {
+            id: null,
+            name: ''
+          },
+          files: [],
+          checklistIds: [],
+          ticketPriority: { 
+            id: 0,
+            name: ''
+          },
+          assignedTeam: {
+            id: null,
+            name: ''
+          },
+          assignedUser: {
+            id: null,
+            name: ''
+          },
+          signatureRequiredToCompleteWork: false,
+          estimatedHours: 0,
+          projectedParts: [],
+          checklist: [],
+          requestId: 0,
+        })
+        navigate('/work-orders')
+      }
+
+      return
     })
 
-    redirect('/work-orders')
 
   }
 
@@ -192,8 +232,9 @@ const WorkOrderSummary = () => {
           </div>
           <div className="row">
             <div className="col-md-3 d-grid gap-2">
-              <div className="fs-14 fw-medium">Part A - 100005, 3 Pieces</div>
-              <div className="fs-14 fw-medium">Part A - 100005, 3 Pieces</div>
+              {formData.projectedParts.map(v => (
+                <div className="fs-14 fw-medium">{v.name}</div>
+              ))}
             </div>
           </div>
           <hr />
@@ -232,7 +273,7 @@ const WorkOrderSummary = () => {
                   className="fs-14 fw-medium text-start"
                   style={{ color: "#D57D2A" }}
                 >
-                  {formData.files[0].fileName}
+                  {formData.files[0].fileName !== undefined ? formData.files[0].fileName : ''}
                 </button>
               </div>
             </div>

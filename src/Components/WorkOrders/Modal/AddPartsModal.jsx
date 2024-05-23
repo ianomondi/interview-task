@@ -1,20 +1,17 @@
 import React, { useContext, useState } from "react";
 import { Dropdown } from "react-bootstrap";
 import Modal from "react-bootstrap/Modal";
-import { Link } from "react-router-dom";
 import SearchIcon from "../../../Assets/Icons/SearchIcon";
 import { WorkOrderFormContext } from "../../../Providers/WorkOrderFormProvider";
 
 const AddPartsModal = (props) => {
+  const {formData, setFormData } = useContext(WorkOrderFormContext)
   const [selectedPart, setselectedPart] = useState("Select Part");
   const [selectedPartLocation, setselectedPartLocation] = useState(
     "Select location of part"
   );
 
-  const {formData, setFormData } = useContext(WorkOrderFormContext)
   //Dummy part and location data
-
-  console.log(props.partData)
   
   const partLocationData = [
     { name: "Select  " },
@@ -30,6 +27,12 @@ const AddPartsModal = (props) => {
   //part category search input
   const [partSearch, setPartSearch] = useState("");
 
+// {
+//   "spareId": 1,
+//   "quantity": 10,
+//   "locationId": 10
+// }
+
   //filter part and location data
   const filteredPartData = props.partData.filter((item) => {
     return item.partName.toLowerCase().includes(partSearch.toLowerCase());
@@ -39,7 +42,13 @@ const AddPartsModal = (props) => {
   });
 
   const handlePartSelect = (eventKey) => {
-    setselectedPart(eventKey);
+    const values = eventKey.split('$')
+
+    setselectedPart({
+      spareId: Number(values[0]),
+      name: values[1], 
+      quantity: 0,
+    });
     setPartSearch("");
   };
   const handlePartLocationSelect = (eventKey) => {
@@ -47,6 +56,28 @@ const AddPartsModal = (props) => {
     setPartLocationSearch("");
   };
 
+  function handleQuantityChange(event){
+    const { value } = event.target
+    setselectedPart(prev => ({...prev, quantity: Number(value)}))
+  }
+
+  function handleAddPart(){
+    if (selectedPart === 'Select Part'){
+      props.onHide()
+    }
+
+    setFormData((prev) => {
+      const existingParts = prev.projectedParts
+      existingParts.push(selectedPart)
+      return {
+        ...prev,
+        projectedParts: existingParts
+      }
+    })
+    props.onHide()
+  }
+
+  console.log(formData)
   return (
     <Modal
       {...props}
@@ -72,7 +103,7 @@ const AddPartsModal = (props) => {
                   }`}
                   style={{ height: "50px" }}
                 >
-                  {selectedPart}
+                  {selectedPart === 'Select Part' ? 'Select Part': selectedPart.name}
                 </Dropdown.Toggle>
                 <Dropdown.Menu>
                   <form className="dropdown-search">
@@ -100,7 +131,8 @@ const AddPartsModal = (props) => {
               <label className="fw-medium pb-2">Quantity</label>
               <input
                 className="modal-input-box"
-                type="text"
+                type="number"
+                onChange={handleQuantityChange}
                 style={{
                   background: "#F1EFEF",
                   width: "100%",
@@ -164,9 +196,9 @@ const AddPartsModal = (props) => {
             <button className="cancel-btn" onClick={props.onHide}>
               Cancel
             </button>
-            <Link to="" className="delate-btn" onClick={props.onHide}>
+            <button className="delate-btn" onClick={handleAddPart}>
               Add
-            </Link>
+            </button>
           </div>
         </div>
       </Modal.Body>

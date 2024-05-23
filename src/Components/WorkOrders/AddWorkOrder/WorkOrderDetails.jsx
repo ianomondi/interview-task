@@ -16,7 +16,7 @@ const WorkOrderDetails = () => {
   const [addPartShow, setAddPartShow] = useState(false);
   const [selectedWork, setselectedWork] = useState(formData.workCategory.name === '' ? 'Select': formData.workCategory.name);
   const [selectedTeam, setselectedTeam] = useState(formData.assignedTeam.name === '' ? "Select": formData.assignedTeam.name);
-  const [selectedAssignWorker, setselectedAssignWorker] = useState("Select");
+  const [selectedAssignWorker, setselectedAssignWorker] = useState(formData.assignedUser.name === '' ? "Select": formData.assignedUser.name);
   const [selectedPart, setselectedPart] = useState("Part B - 200008");
   //part search input
   const [partSearch, setPartSearch] = useState("");
@@ -51,6 +51,7 @@ const WorkOrderDetails = () => {
   const [assignWorkerData, setWorkerData] = useState([])
   const [checkList, setCheckList] = useState([])
   const [parts, setParts] = useState([])
+  const [partToEdit, setPartToEdit] = useState([])
 
 
   const [selectValue, setSelectValue] = useState({
@@ -65,9 +66,34 @@ const WorkOrderDetails = () => {
     check.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handlePartSelect = (eventKey) => {
-    setselectedPart(eventKey);
-    setSelectValue({ ...selectValue, part: eventKey });
+  const handleUpdatePartSelect = (eventKey) => {
+    const values = eventKey.split('$')
+    const spareId = Number(values[0])
+    setFormData((prev) => {
+      const partExists = prev.projectedParts.some(
+        (part) => part.spareId === Number(values[0])
+      )
+
+      let updatedPartList
+      if (partExists) {
+        updatedPartList = prev.projectedParts.map((part) =>
+          part.spareId === spareId
+            ? { ...part, quantity: 12 } // Update quantity to the desired value
+            : part
+        );
+      } else {
+        updatedPartList = [
+          ...prev.projectedParts,
+          { spareId: spareId, name: Number(values[1]), quantity: 12 }, // Add new part if it does not exist
+        ];
+      }
+
+      return {
+        ...prev,
+        projectedParts: updatedPartList,
+        selectedPart: { spareId, name: Number(values[1]), quantity: 12 },
+      };
+    })
   };
 
   useEffect(() => {
@@ -79,7 +105,6 @@ const WorkOrderDetails = () => {
     .then(data => {
       setWorkData(data)
     })
-
 
     get('https://saharadeskbackend.azurewebsites.net/api/Tickets/GetAllTicketPriorities', token)
     .then(data => {
@@ -93,7 +118,6 @@ const WorkOrderDetails = () => {
 
     get('https://saharadeskbackend.azurewebsites.net/api/Parts/GetAllParts', token)
     .then(data => {
-      console.log(data)
       setParts(data)
     })
   }, [])
@@ -150,8 +174,8 @@ const WorkOrderDetails = () => {
     return item.user.userName.toLowerCase().includes(assignWorkerSearch.toLowerCase());
   });
   //filter project parts data
-  const filteredProjectParts = projectParts.filter((item) => {
-    return item.part.toLowerCase().includes(partSearch.toLowerCase());
+  const filteredProjectParts = parts.filter((item) => {
+    return item.partName.toLowerCase().includes(partSearch.toLowerCase());
   });
 
   const handleWorkSelect = (eventKey) => {
@@ -168,10 +192,8 @@ const WorkOrderDetails = () => {
       }
     })
   };
-  console.log(formData)
   const handleTeamSelect = (eventKey) => {
     const values = eventKey.split('$')
-    console.log(values)
     setselectedTeam(values[1]);
     setSelectValue({ ...selectValue, assignTeam: values[1] });
     setTeamSearch("");
@@ -230,7 +252,6 @@ const WorkOrderDetails = () => {
 
   function handleCheckListChange(value){
     setFormData((prev) => {
-      console.log('THe id and name', value)
       const assertExists = prev.checklist.some(
         (asset) => asset.id === value.id
       )
@@ -255,7 +276,6 @@ const WorkOrderDetails = () => {
   }
 
   function handleRemoveChecklistItem(value) {
-    console.log(value)
     setFormData((prev) => {
       const updatedCheckList = prev.checklist.filter(
         (asset) => asset.id !== value.id
@@ -266,6 +286,22 @@ const WorkOrderDetails = () => {
         checklist: updatedCheckList
       }
     })
+  }
+
+  function handleRemoveProjectedPart(id) {
+    setFormData((prev) => {
+      const updatedProjectedParts = prev.projectedParts.filter(
+        (part) => part.id !== id
+      )
+      return {
+        ...prev,
+        projectedParts: updatedProjectedParts
+      }
+    })
+  }
+
+  function handleUpdateProjectPart(value){
+    console.log(value)
   }
 
   return (
@@ -420,7 +456,7 @@ const WorkOrderDetails = () => {
           </div>
           <div className="col-md-6">
             <label>Estimate Hours</label>
-            <input type="number" className="input-box" onChange={handleEstimatedHours}/>
+            <input type="number" className="input-box" onChange={handleEstimatedHours} value={formData.estimatedHours}/>
           </div>
         </div>
         <hr />
@@ -439,17 +475,22 @@ const WorkOrderDetails = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {projectParts.map((part, index) => (
+                  {formData.projectedParts.length > 0 && formData.projectedParts.map((part, index) => (
                     <tr key={index}>
                       <td>
-                        <input readOnly type="text" value={part.part} />
+                        <input readOnly type="text" value={part.name} />
                       </td>
                       <td>
                         <input readOnly type="number" value={part.quantity} />
                       </td>
                       <td>
                         <div className="button-con">
-                          <button onClick={handleShow}>
+                          <button 
+                            onClick={e => {
+                              setPartToEdit(part)
+                              handleShow()
+                            }}
+                          >
                             <EditIcon2 />
                           </button>
                           <Modal
@@ -480,7 +521,7 @@ const WorkOrderDetails = () => {
                                   </label>
                                   <Dropdown
                                     className="select__form"
-                                    onSelect={handlePartSelect}
+                                    onSelect={handleUpdatePartSelect}
                                   >
                                     <Dropdown.Toggle
                                       className={`select-title ${
@@ -490,7 +531,7 @@ const WorkOrderDetails = () => {
                                       }`}
                                       style={{ height: "50px" }}
                                     >
-                                      {selectedPart}
+                                      {partToEdit.name}
                                     </Dropdown.Toggle>
                                     <Dropdown.Menu>
                                       <form className="dropdown-search">
@@ -498,7 +539,7 @@ const WorkOrderDetails = () => {
                                           <SearchIcon />
                                         </button>
                                         <input
-                                          value={partSearch}
+                                          value={partToEdit.name}
                                           onChange={(e) =>
                                             setPartSearch(e.target.value)
                                           }
@@ -510,10 +551,10 @@ const WorkOrderDetails = () => {
                                         {filteredProjectParts.map(
                                           (item, index) => (
                                             <Dropdown.Item
-                                              key={item.id}
-                                              eventKey={item.part}
+                                              key={index}
+                                              eventKey={item.id + '$' + item.partName}
                                             >
-                                              {item.part}
+                                              {item.partName}
                                             </Dropdown.Item>
                                           )
                                         )}
@@ -580,13 +621,7 @@ const WorkOrderDetails = () => {
                             </div>
                           </Modal>
                           <button
-                            onClick={() =>
-                              setProjectParts(
-                                projectParts.filter(
-                                  (item) => item.id !== part.id
-                                )
-                              )
-                            }
+                            onClick={e => handleRemoveProjectedPart(part.id)}
                           >
                             <DelateIcon2 />
                           </button>

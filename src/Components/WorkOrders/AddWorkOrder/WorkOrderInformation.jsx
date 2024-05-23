@@ -47,15 +47,6 @@ const WorkOrderInformation = () => {
       
       reader.readAsDataURL(file);
     });
-
-    // // const selectedFiles = Array.from(e.target.files);
-    // const newFiles = selectedFiles.filter(
-    //   (file) => !attachments.includes(file.name)
-    // );
-    // setAttachments((prevAttachments) => [
-    //   ...prevAttachments,
-    //   ...newFiles.map((file) => file.name),
-    // ]);
   };
 
   const deleteFile = (attachment) => {
